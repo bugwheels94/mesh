@@ -113,7 +113,7 @@ class Plugin extends BasePluginClass {
 		);
 		if (!correctDeps.length) return null;
 		return this.chooseShellMethod(this._options.subcommand).method({
-			args: ['install', ...correctDeps],
+			args: ['install', '--legacy-peer-deps', ...correctDeps],
 			command: 'npm',
 			folder: null,
 			shouldRunInCurrentFolder: true,
