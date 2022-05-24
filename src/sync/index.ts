@@ -88,6 +88,18 @@ class Plugin extends BasePluginClass {
 				devDependencies[dep] = packageJson.devDependencies[dep];
 			}
 		}
+		writeJSONFile('package.json', {
+			...packageJson,
+			dependencies,
+			devDependencies,
+		});
+		if (!correctDeps.length) return null;
+		await this.chooseShellMethod(this._options.subcommand).method({
+			args: ['install', '--legacy-peer-deps', ...correctDeps],
+			command: 'npm',
+			folder: null,
+			shouldRunInCurrentFolder: true,
+		}).promise;
 		await Promise.all(
 			githubReleaseDeps.map(async (deps) => {
 				const [_, userName, repoName] = deps.match(/([^/:]+)\/([^/]+)\.git$/);
@@ -98,11 +110,12 @@ class Plugin extends BasePluginClass {
 				if (!release) throw new Error('Release with tag' + branch + 'not found!');
 				const asset = release.assets.find((asset) => asset.name === 'dist.zip');
 				if (!asset) throw new Error('Release Found! File not found!');
-				const zip = userName + repoName + '.zip';
+				const zip = path.join(process.cwd(), userName + repoName + '.zip');
 				console.log('Download url', asset.browser_download_url);
 				await download(asset.browser_download_url, zip);
 				const targetPath = path.join(process.cwd(), 'node_modules', 'mesh' + userName + repoName);
 				try {
+					console.log('Extracting ', zip, ' to ', targetPath);
 					await extract(zip, {
 						dir: targetPath,
 					});
@@ -112,22 +125,11 @@ class Plugin extends BasePluginClass {
 				}
 				const packageJson2 = readJSONFile(path.join('node_modules', 'mesh' + userName + repoName, 'package.json'));
 				if (!packageJson2) return;
+				console.log(targetPath, packageJson2.name, path.join(process.cwd(), 'node_modules', packageJson2.name));
 				fse.moveSync(targetPath, path.join(process.cwd(), 'node_modules', packageJson2.name), { overwrite: true });
 				return;
 			})
 		);
-		writeJSONFile('package.json', {
-			...packageJson,
-			dependencies,
-			devDependencies,
-		});
-		if (!correctDeps.length) return null;
-		return this.chooseShellMethod(this._options.subcommand).method({
-			args: ['install', '--legacy-peer-deps', ...correctDeps],
-			command: 'npm',
-			folder: null,
-			shouldRunInCurrentFolder: true,
-		}).promise;
 	}
 	async syncDirs(directory: string) {
 		const dir = path.join(process.cwd(), 'node_modules', directory);
