@@ -29,7 +29,13 @@ export type Config = {
 	workspaces?: string[];
 };
 export type ConfluxRC = {
-	dependencies?: Record<string, 'github-release' | 'npm' | 'github'>;
+	dependencies?: Record<
+		string,
+		{
+			type: 'github-release' | 'npm' | 'github';
+			target: string;
+		}
+	>;
 };
 export type Await<T> = T extends PromiseLike<infer U> ? U : T;
 export const download = function (url: string, dest: string) {

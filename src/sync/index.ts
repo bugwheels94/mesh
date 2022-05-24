@@ -44,7 +44,6 @@ class Plugin extends BasePluginClass {
 		const packageJson = readJSONFile('package.json');
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
 		if (!isBranchInProgress) return null;
-		const confluxDepsObject = config.dependencies || {};
 		const confluxDeps = Object.keys(config.dependencies) || [];
 		const trim: string[] = [];
 		// All of the deps will be removed from package.json bcoz it is assumed that conflux dependencies will be exhausted while
@@ -52,13 +51,14 @@ class Plugin extends BasePluginClass {
 		// if they are not being used in npm build then maybe dont sync in which case it wont be removed
 		const correctDeps = confluxDeps
 			.map((dependency) => {
-				const version = packageJson.dependencies?.[dependency] || packageJson.devDependencies?.[dependency];
+				const version = config.dependencies?.[dependency];
 				if (!version) return null;
-				if (!version.startsWith('git')) {
+				const target = version.target || '';
+				if (!target.startsWith('git')) {
 					trim.push(dependency);
 					return `${dependency}${branch === 'master' ? '' : '@' + branch}`;
 				}
-				if (confluxDepsObject[dependency] !== 'github-release') {
+				if (version.type !== 'github-release') {
 					trim.push(dependency);
 					return `${version}#${branch}`;
 				}
@@ -67,10 +67,12 @@ class Plugin extends BasePluginClass {
 			.filter((t) => t);
 		const githubReleaseDeps = confluxDeps
 			.map((dependency) => {
-				const version = packageJson.dependencies?.[dependency] || packageJson.devDependencies?.[dependency];
-				if (!version || !version.startsWith('git') || confluxDepsObject[dependency] !== 'github-release') return null;
+				const version = config.dependencies?.[dependency];
+				const target = version.target || '';
+
+				if (!version || !target.startsWith('git') || version.type !== 'github-release') return null;
 				trim.push(dependency);
-				return version;
+				return version.target;
 			})
 			.filter((t) => t);
 		const packageJsonDependencies: Record<string, string> = packageJson.dependencies || {};
