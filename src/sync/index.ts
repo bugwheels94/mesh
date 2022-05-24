@@ -108,18 +108,18 @@ class Plugin extends BasePluginClass {
 				return;
 			})
 		);
-		if (!correctDeps.length) return null;
-		await this.chooseShellMethod(this._options.subcommand).method({
-			args: ['install', '--legacy-peer-deps', ...correctDeps],
-			command: 'npm',
-			folder: null,
-			shouldRunInCurrentFolder: true,
-		}).promise;
 		writeJSONFile('package.json', {
 			...packageJson,
 			dependencies,
 			devDependencies,
 		});
+		if (!correctDeps.length) return null;
+		return this.chooseShellMethod(this._options.subcommand).method({
+			args: ['install', '--legacy-peer-deps', ...correctDeps],
+			command: 'npm',
+			folder: null,
+			shouldRunInCurrentFolder: true,
+		}).promise;
 	}
 	async syncDirs(directory: string) {
 		const dir = path.join(process.cwd(), 'node_modules', directory);
