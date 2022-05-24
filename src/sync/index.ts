@@ -39,7 +39,7 @@ class Plugin extends BasePluginClass {
 	}
 	async syncDependencies() {
 		const branch = process.env.GITHUB_REF ? process.env.GITHUB_REF.split('/').slice(2).join('/') : 'alpha';
-		console.log(branch);
+		console.log(branch, 'bhutiya');
 		const config: ConfluxRC = readJSONFile('.confluxrc');
 		const packageJson = readJSONFile('package.json');
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
@@ -89,11 +89,6 @@ class Plugin extends BasePluginClass {
 				devDependencies[dep] = packageJson.devDependencies[dep];
 			}
 		}
-		writeJSONFile('package.json', {
-			...packageJson,
-			dependencies,
-			devDependencies,
-		});
 		await Promise.all(
 			githubReleaseDeps.map(async (deps) => {
 				const [_, userName, repoName] = deps.match(/([^/:]+)\/([^/]+)\.git$/);
@@ -114,12 +109,17 @@ class Plugin extends BasePluginClass {
 			})
 		);
 		if (!correctDeps.length) return null;
-		return this.chooseShellMethod(this._options.subcommand).method({
+		await this.chooseShellMethod(this._options.subcommand).method({
 			args: ['install', '--legacy-peer-deps', ...correctDeps],
 			command: 'npm',
 			folder: null,
 			shouldRunInCurrentFolder: true,
 		}).promise;
+		writeJSONFile('package.json', {
+			...packageJson,
+			dependencies,
+			devDependencies,
+		});
 	}
 	async syncDirs(directory: string) {
 		const dir = path.join(process.cwd(), 'node_modules', directory);
