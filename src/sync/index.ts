@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-
+import fse from 'fs-extra';
 import extract from 'extract-zip';
 import fetch from 'node-fetch';
 
@@ -38,8 +38,7 @@ class Plugin extends BasePluginClass {
 		return Promise.all([this.syncDirs('.bin'), this.syncDirs('@types')]).then((_) => 'Done');
 	}
 	async syncDependencies() {
-		const branch = process.env.GITHUB_REF ? process.env.GITHUB_REF.split('/').slice(2).join('/') : 'alpha';
-		console.log(branch, 'bhutiya');
+		const branch = process.env.GITHUB_REF ? process.env.GITHUB_REF.split('/').slice(2).join('/') : 'master';
 		const config: ConfluxRC = readJSONFile('.confluxrc');
 		const packageJson = readJSONFile('package.json');
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
@@ -102,9 +101,18 @@ class Plugin extends BasePluginClass {
 				const zip = userName + repoName + '.zip';
 				console.log('Download url', asset.browser_download_url);
 				await download(asset.browser_download_url, zip);
-				extract(zip, {
-					dir: path.join(process.cwd(), 'node_modules', repoName),
-				});
+				const targetPath = path.join(process.cwd(), 'node_modules', 'mesh' + userName + repoName);
+				try {
+					await extract(zip, {
+						dir: targetPath,
+					});
+				} catch (e) {
+					console.log(e);
+					throw e;
+				}
+				const packageJson2 = readJSONFile(path.join('node_modules', 'mesh' + userName + repoName, 'package.json'));
+				if (!packageJson2) return;
+				fse.moveSync(targetPath, path.join(process.cwd(), 'node_modules', packageJson2.name), { overwrite: true });
 				return;
 			})
 		);

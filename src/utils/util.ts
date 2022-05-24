@@ -58,6 +58,7 @@ export const readRCFile = (fileName: string) => {
 };
 export const readJSONFile = (fileName: string) => {
 	try {
+		console.log('final', path.join(process.cwd(), fileName));
 		return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'));
 	} catch (e) {
 		return null;
