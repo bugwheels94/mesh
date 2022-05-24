@@ -1,0 +1,3 @@
+[submodule "dargs"]
+	path = src/dargs
+	url = https://github.com/sindresorhus/dargs.git
