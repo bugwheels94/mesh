@@ -4,7 +4,7 @@ import archiver from 'archiver';
 
 import { readJSONFile } from '../utils/util';
 
-export const generateBundle = async function () {
+export const zipNpmFiles = async function () {
 	const packageJson = readJSONFile('package.json');
 
 	console.log('WOW');

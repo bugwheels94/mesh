@@ -14,8 +14,13 @@ export const addSemantic = async function (plugin: Plugin) {
 	const answers = await inquirer.prompt([
 		{
 			type: 'confirm',
-			name: 'message',
-			message: `Do you want to enable NPM publish for ${folder.path}`,
+			name: 'npm',
+			message: `Do you want to enable NPM publish plugin for ${folder.path}`,
+		},
+		{
+			type: 'confirm',
+			name: 'exec',
+			message: `Do you want to enable exec plugin for ${folder.path}`,
 		},
 	]);
 	await plugin.chooseShellMethod(subcommand).method({
@@ -23,7 +28,9 @@ export const addSemantic = async function (plugin: Plugin) {
 			'install',
 			'semantic-release',
 			'@semantic-release/github',
-			answers.message ? '@semantic-release/npm' : '',
+			answers.npm ? '@semantic-release/npm' : '',
+			answers.exec ? '@semantic-release/exec' : '',
+			'--legacy-peer-deps',
 			'--save-dev',
 		],
 		command: 'npm',
@@ -34,7 +41,17 @@ export const addSemantic = async function (plugin: Plugin) {
 		plugins: [
 			'@semantic-release/commit-analyzer',
 			'@semantic-release/release-notes-generator',
-			...(answers.message ? ['@semantic-release/npm'] : []),
+			...(answers.npm ? ['@semantic-release/npm'] : []),
+			...(answers.exec
+				? [
+						[
+							'@semantic-release/exec',
+							{
+								publishCmd: 'export VERSION=${nextRelease.version}',
+							},
+						],
+				  ]
+				: []),
 			[
 				'@semantic-release/github',
 				{

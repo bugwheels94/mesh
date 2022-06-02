@@ -40,7 +40,6 @@ export const addFolder = async function () {
 		},
 	]);
 	config.folders.push({
-		url: '',
 		name: answers.name,
 		path: answers.path,
 		groups: uniq([...answers.groups, ...(answers.newGroups ? answers.newGroups.split(',') : [])]),

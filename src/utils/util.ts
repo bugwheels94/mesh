@@ -7,10 +7,14 @@ import minimist from 'minimist';
 import fetch from 'node-fetch';
 import shell from 'shelljs';
 
+export const delay = (n = 5000) =>
+	new Promise((resolve) => {
+		setTimeout(resolve, n);
+	});
 export type Config = {
 	parameters?: minimist.ParsedArgs;
 	folders?: {
-		plugins: Record<
+		plugins?: Record<
 			string,
 			{
 				blacklist?: string[];
@@ -19,8 +23,7 @@ export type Config = {
 		>;
 		name: string;
 		path: string;
-		groups: string[];
-		url: string;
+		groups?: string[];
 	}[];
 	plugins?: {
 		name: string;
@@ -61,6 +64,9 @@ export const readJSONFile = (fileName: string) => {
 		console.log('final', path.join(process.cwd(), fileName));
 		return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'));
 	} catch (e) {
+		writePermanentText('Error', 'Cannot read File ' + fileName, {
+			isError: true,
+		});
 		return null;
 	}
 };
@@ -144,3 +150,4 @@ export interface Constructable<T> {
 export const globalConfig = {
 	disableStdout: false,
 };
+export const kebabToCamel = (s: string) => s.replace(/-./g, (x) => x[1].toUpperCase());
