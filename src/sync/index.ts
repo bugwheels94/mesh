@@ -34,7 +34,11 @@ class Plugin extends BasePluginClass {
 		return null;
 	}
 	async syncDependencies() {
-		const branch = process.env.GITHUB_REF ? process.env.GITHUB_REF.split('/').slice(2).join('/') : 'master';
+		const branch = process.env.GITHUB_REF
+			? process.env.GITHUB_REF.split('/').slice(2).join('/')
+			: process.env.BRANCH_NAME
+			? process.env.BRANCH_NAME
+			: 'master';
 		const packageJson = readJSONFile('package.json');
 		const workspaceDependencies: ConfluxRC = packageJson.syncWorkspaceDependencies || {};
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);

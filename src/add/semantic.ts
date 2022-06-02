@@ -42,16 +42,6 @@ export const addSemantic = async function (plugin: Plugin) {
 			'@semantic-release/commit-analyzer',
 			'@semantic-release/release-notes-generator',
 			...(answers.npm ? ['@semantic-release/npm'] : []),
-			...(answers.exec
-				? [
-						[
-							'@semantic-release/exec',
-							{
-								publishCmd: 'export VERSION=${nextRelease.version}',
-							},
-						],
-				  ]
-				: []),
 			[
 				'@semantic-release/github',
 				{
@@ -62,6 +52,16 @@ export const addSemantic = async function (plugin: Plugin) {
 					],
 				},
 			],
+			...(answers.exec
+				? [
+						[
+							'@semantic-release/exec',
+							{
+								publishCmd: 'export VERSION=${nextRelease.version}',
+							},
+						],
+				  ]
+				: []),
 		],
 	});
 	await fs.promises.mkdir(path.join(process.cwd(), folder.path, '.github', 'workflows'), {
