@@ -57,7 +57,7 @@ export const addSemantic = async function (plugin: Plugin) {
 						[
 							'@semantic-release/exec',
 							{
-								publishCmd: 'export VERSION=${nextRelease.version}',
+								publishCmd: 'echo ${nextRelease.version} > .version_semantic_info_workaround',
 							},
 						],
 				  ]
