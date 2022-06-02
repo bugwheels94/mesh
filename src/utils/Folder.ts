@@ -4,7 +4,7 @@ import shell from 'shelljs';
 
 import { BasePluginClass } from './Plugin';
 import { asyncSpawn } from './asyncSpawn';
-import { Config, Constructable, ShellTypes } from './util';
+import { Config, Constructable, delay, ShellTypes, writePermanentText } from './util';
 
 export interface IProcessFunction {
 	type: ShellTypes;
@@ -36,6 +36,16 @@ export class Folder {
 	}
 	async chooseFolders(folders?: Config['folders']) {
 		const choices = (folders || this._options.folders).map((f) => f.path);
+		if (choices.length === 0) {
+			writePermanentText('Warn', 'No folder found, we are selecting the current folder automatically in 5 seconds...');
+			await delay();
+			return [
+				{
+					name: process.cwd(),
+					path: process.cwd(),
+				},
+			];
+		}
 		const answer = await inquirer.prompt([
 			{
 				type: 'checkbox',
@@ -69,16 +79,12 @@ export class Folder {
 			});
 			const shellObject = plugin.chooseShellMethod(subcommand);
 
-			let temp = await plugin.run();
-
-			plugin.result = temp;
+			plugin.result = plugin.run();
 
 			if (shellObject.type === ShellTypes.SYNC || shellObject.type === ShellTypes.VIRTUAL_SYNC) {
 				try {
-					await temp.promise;
-				} catch (e) {
-					temp = null;
-				}
+					await plugin.result.promise;
+				} catch (e) {}
 			}
 		}
 		return plugins;

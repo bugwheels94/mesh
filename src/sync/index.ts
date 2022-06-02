@@ -2,8 +2,9 @@
 
 import fs from 'fs';
 import path from 'path';
-import fse from 'fs-extra';
+
 import extract from 'extract-zip';
+import fse from 'fs-extra';
 import fetch from 'node-fetch';
 
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
@@ -29,28 +30,23 @@ class Plugin extends BasePluginClass {
 	async runOnAll() {
 		if (this._options.subcommand === 'dependencies') {
 			return this.syncDependencies();
-		} else if (this._options.subcommand === 'symlinks') {
-			return this.syncSymlinksAndTypes();
 		}
 		return null;
 	}
-	async syncSymlinksAndTypes() {
-		return Promise.all([this.syncDirs('.bin'), this.syncDirs('@types')]).then((_) => 'Done');
-	}
 	async syncDependencies() {
 		const branch = process.env.GITHUB_REF ? process.env.GITHUB_REF.split('/').slice(2).join('/') : 'master';
-		const config: ConfluxRC = readJSONFile('.confluxrc');
 		const packageJson = readJSONFile('package.json');
+		const workspaceDependencies: ConfluxRC = packageJson.syncWorkspaceDependencies || {};
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
 		if (!isBranchInProgress) return null;
-		const confluxDeps = Object.keys(config.dependencies) || [];
+		const confluxDeps = Object.keys(workspaceDependencies) || [];
 		const trim: string[] = [];
 		// All of the deps will be removed from package.json bcoz it is assumed that conflux dependencies will be exhausted while
 		// while building the project
 		// if they are not being used in npm build then maybe dont sync in which case it wont be removed
 		const correctDeps = confluxDeps
 			.map((dependency) => {
-				const version = config.dependencies?.[dependency];
+				const version = workspaceDependencies?.[dependency];
 				if (!version) return null;
 				const target = version.target || '';
 				if (!target.startsWith('git')) {
@@ -66,7 +62,7 @@ class Plugin extends BasePluginClass {
 			.filter((t) => t);
 		const githubReleaseDeps = confluxDeps
 			.map((dependency) => {
-				const version = config.dependencies?.[dependency];
+				const version = workspaceDependencies?.[dependency];
 				const target = version.target || '';
 
 				if (!version || !target.startsWith('git') || version.type !== 'github-release') return null;
@@ -100,6 +96,7 @@ class Plugin extends BasePluginClass {
 			folder: null,
 			shouldRunInCurrentFolder: true,
 		}).promise;
+		// move to the end otherwise node_modules end up removing
 		await Promise.all(
 			githubReleaseDeps.map(async (deps) => {
 				const [_, userName, repoName] = deps.match(/([^/:]+)\/([^/]+)\.git$/);

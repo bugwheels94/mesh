@@ -12,7 +12,7 @@ class Plugin extends BasePluginClass {
 		super(options);
 		this.checkCommandExist('git');
 	}
-	async run() {
+	run() {
 		const { folder, args, subcommand, argv } = this._options;
 		let rawArgs = args;
 		if (subcommand === 'commit') {

@@ -9,7 +9,7 @@ import dargs from './dargs/index';
 import { Folder } from './utils/Folder';
 import { BasePluginClass } from './utils/Plugin';
 import { localConfig } from './utils/config';
-import { Await, Config, config, globalConfig, writeLogicalText } from './utils/util';
+import { Await, config, Config, globalConfig, kebabToCamel, writeLogicalText } from './utils/util';
 const argv = minimist(process.argv.slice(2));
 const command = argv._.shift();
 const globalPluginConfig = [...localConfig.plugins, ...(config.plugins || [])].find(({ alias }) => alias === command);
@@ -26,7 +26,7 @@ const segregateConfluxArgs = (argv: minimist.ParsedArgs) => {
 	return Object.keys(argv).reduce(
 		(acc, current) => {
 			if (current.startsWith('cfx-')) {
-				acc.cfx[current.slice(4)] = argv[current];
+				acc.cfx[kebabToCamel(current.slice(4))] = argv[current];
 			} else {
 				acc.remaining[current] = argv[current];
 			}
@@ -57,10 +57,9 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => (folder: Con
 	});
 	type T = string | null;
 	const subcommand: T = argv._.length ? argv._[0] : null;
-
 	const filteredFolders = folders.filter(filterByConfluxGroups(segregated.cfx)).filter((folder) => {
 		if (folder.plugins?.[globalPluginConfig.alias] === undefined) {
-			return false;
+			return true;
 		} // if no plugins means no local config then means enable
 		const localPluginConfig = folder.plugins[globalPluginConfig.alias];
 		const blacklists = localPluginConfig.blacklist || [];
@@ -80,7 +79,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => (folder: Con
 	if (doesRequireFolders) {
 		let instances: Await<ReturnType<Folder['runOnSelectedFolders']>>, folders;
 		try {
-			folders = await folder.chooseFolders();
+			folders = segregated.cfx.noPrompt ? filteredFolders : await folder.chooseFolders();
 			instances = await folder.runOnSelectedFolders(Plugin, folders);
 		} catch (e) {}
 		process.on('uncaughtException', function (err) {

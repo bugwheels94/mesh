@@ -46,9 +46,7 @@ export abstract class BasePluginClass {
 			shell.exit(1);
 		}
 	}
-	async run(): Promise<
-		ReturnType<ReturnType<typeof asyncSpawn>> | { promise: Promise<string>; folder: Config['folders'][0] }
-	> {
+	run(): ReturnType<ReturnType<typeof asyncSpawn>> {
 		return null;
 	}
 	async runOnAll(): Promise<string> {
