@@ -62,7 +62,9 @@ export const asyncSpawn =
 			// };
 			if (finalOptions.stdio === 'pipe') {
 				// process.stdin.on('data', temp);
-				process.stdin.setRawMode(true);
+				if (process.stdin.isTTY) {
+					process.stdin.setRawMode(true);
+				}
 				// process.stdin.resume();
 				process.stdin.pipe(obj.process.stdin);
 				let buffer = [],

@@ -123,7 +123,9 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => (folder: Con
 			}
 			if (!globalConfig.disableStdout) process.stdout.write(args);
 		});
-		process.stdin.setRawMode(true);
+		if (process.stdin.isTTY) {
+			process.stdin.setRawMode(true);
+		}
 	} else {
 		const r: BasePluginClass = new Plugin(pluginArguments);
 		r.runOnAll();
