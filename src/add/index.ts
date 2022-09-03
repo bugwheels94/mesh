@@ -22,7 +22,7 @@ class Plugin extends BasePluginClass {
 	async runOnAll() {
 		if (this._options.subcommand === 'folder') return addFolder();
 	}
-	async run() {
+	run() {
 		const { folder, args, subcommand } = this._options;
 		if (subcommand === 'commitizen') {
 			return { promise: addCommitizen(this), folder };

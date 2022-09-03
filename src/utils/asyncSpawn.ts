@@ -1,5 +1,5 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-
+import path from 'path';
 import throttle from 'lodash.throttle';
 
 import { Config, globalConfig, writeIndentedText, writeLogicalText, writePermanentText } from './util';
@@ -36,7 +36,8 @@ export const asyncSpawn =
 			...optionsByCommand,
 		};
 		const folderPath = folder === null ? '' : folder.path;
-		if (!finalOptions.shouldRunInCurrentFolder) finalOptions.cwd = folderPath;
+		if (!finalOptions.shouldRunInCurrentFolder) finalOptions.cwd = path.join(process.cwd(), folderPath);
+		else finalOptions.cwd = process.cwd();
 
 		obj.promise = new Promise(function (resolve, reject) {
 			const dataChunks: Uint8Array[] = [];
@@ -47,15 +48,23 @@ export const asyncSpawn =
 			}
 			obj.process = spawn(command, args, {
 				...finalOptions,
-				shell: '/bin/bash',
+				env: process.env,
 			});
+			writePermanentText(
+				folderPath,
+				'Running: (' + command + ' ' + args.join(' ') + ') in the directory: ' + finalOptions.cwd
+			);
+			console.log();
+
 			// const temp = (ch: Buffer) => {
 			//   console.log('writing', ch);
 			//   obj.process.stdin.write(ch);
 			// };
 			if (finalOptions.stdio === 'pipe') {
 				// process.stdin.on('data', temp);
-				process.stdin.setRawMode(true);
+				if (process.stdin.isTTY) {
+					process.stdin.setRawMode(true);
+				}
 				// process.stdin.resume();
 				process.stdin.pipe(obj.process.stdin);
 				let buffer = [],

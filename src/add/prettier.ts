@@ -17,19 +17,17 @@ export const addPrettier = async function (plugin: Plugin) {
 		throw new Error('Already Installed');
 	}
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['install', 'prettier', '--save-dev', '--save-exact', '-w', folder.path],
+		args: ['install', 'prettier', '--save-dev', '--save-exact'],
 		command: 'npm',
 		folder,
-		shouldRunInCurrentFolder: true,
 	}).promise;
 
 	// Detect existing prettier
 
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['install', 'husky', 'lint-staged', '--save-dev', '-w', folder.path],
+		args: ['install', 'husky', 'lint-staged', '--save-dev'],
 		command: 'npm',
 		folder,
-		shouldRunInCurrentFolder: true,
 	}).promise;
 
 	await plugin.chooseShellMethod(subcommand).method({
@@ -43,7 +41,7 @@ export const addPrettier = async function (plugin: Plugin) {
 		folder,
 	}).promise;
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['husky', 'add', '.husky/pre-commit', `"npx lint-staged"`],
+		args: ['husky', 'add', '.husky/pre-commit', `npx lint-staged`],
 		command: 'npx',
 		folder,
 	}).promise;

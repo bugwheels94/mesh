@@ -3,13 +3,12 @@
 import path from 'path';
 
 import dargs from '../dargs';
-import SyncPlugin from '../sync';
 import { Folder } from '../utils/Folder';
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
 import { readRCFile, ShellTypes, writePermanentText, writeRCFile } from '../utils/util';
 
-import { generateBundle } from './generateBundle';
+import { zipNpmFiles } from './generateBundle';
 // const execPromise = util.promisify(exec);
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
@@ -17,15 +16,14 @@ class Plugin extends BasePluginClass {
 		this.checkCommandExist('npm');
 	}
 	static doesRequireFolder({ subcommand }: Parameters<typeof BasePluginClass.doesRequireFolder>[0]) {
-		console.log(subcommand);
-		if (subcommand === 'install' || subcommand === 'generate-bundle') return false;
+		if (['install', 'i', 'version-all'].includes(subcommand)) return false;
 		return true;
 	}
 	async runOnAll() {
 		if (this._options.subcommand === 'install' || this._options.subcommand === 'i') {
 			return this.install();
-		} else if (this._options.subcommand === 'generate-bundle') {
-			return generateBundle();
+		} else if (this._options.subcommand === 'zip-npm-files') {
+			return zipNpmFiles();
 		}
 		return null;
 	}
@@ -61,12 +59,9 @@ class Plugin extends BasePluginClass {
 				shouldRunInCurrentFolder: true,
 			}).promise;
 		}
-		const syncPlugin = new SyncPlugin(this._options);
-		return syncPlugin.syncSymlinksAndTypes().then((_) => 'Done');
 	}
-	async run() {
+	run() {
 		const { folder, args, subcommand } = this._options;
-
 		return this.chooseShellMethod(subcommand).method({
 			args: args,
 			command: 'npm',
@@ -84,7 +79,7 @@ class Plugin extends BasePluginClass {
 						shouldRunInCurrentFolder: true,
 					}),
 				};
-			case 'generate-bundle':
+			case 'zip-npm-files':
 				return {
 					type: ShellTypes.ASYNC,
 					method: asyncSpawn({
@@ -100,6 +95,7 @@ class Plugin extends BasePluginClass {
 				};
 			case 'run':
 			case 'start':
+			case 'version':
 				return {
 					type: ShellTypes.ASYNC,
 					method: asyncSpawn({
@@ -109,6 +105,11 @@ class Plugin extends BasePluginClass {
 				};
 
 			case 'init':
+				return {
+					type: ShellTypes.VIRTUAL_SYNC,
+					method: asyncSpawn({ stdio: 'pipe' }),
+				};
+			case 'publish':
 				return {
 					type: ShellTypes.VIRTUAL_SYNC,
 					method: asyncSpawn({ stdio: 'pipe' }),
