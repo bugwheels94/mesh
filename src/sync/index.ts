@@ -3,21 +3,10 @@
 import fs from 'fs';
 import path from 'path';
 
-import extract from 'extract-zip';
-import fse from 'fs-extra';
-import fetch from 'node-fetch';
-
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
-import { config, ConfluxRC, download, readJSONFile, ShellTypes, writeJSONFile } from '../utils/util';
+import { config, ConfluxRC, readJSONFile, ShellTypes, writeJSONFile } from '../utils/util';
 // const execPromise = util.promisify(exec);
-type GithubRelease = {
-	target_commitish: string;
-	assets: {
-		name: string;
-		browser_download_url: string;
-	}[];
-};
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
 		super(options);
