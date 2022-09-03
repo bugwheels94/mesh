@@ -7,7 +7,6 @@ import { readJSONFile } from '../utils/util';
 export const zipNpmFiles = async function () {
 	const packageJson = readJSONFile('package.json');
 
-	console.log('WOW');
 	const files = (packageJson.files as string[]) || [];
 	if (!files.includes('package.json')) files.push('package.json');
 	// create a file to stream archive data to.

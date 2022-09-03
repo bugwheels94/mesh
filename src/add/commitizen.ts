@@ -22,12 +22,12 @@ export const addCommitizen = async function (plugin: Plugin) {
 		folder,
 	}).promise;
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['set-script', 'prepare', `"husky install"`],
+		args: ['set-script', 'prepare', 'husky install'],
 		command: 'npm',
 		folder,
 	}).promise;
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['husky', 'add', '.husky/prepare-commit-msg', `"exec < /dev/tty && npx cz --hook || true"`],
+		args: ['husky', 'add', '.husky/prepare-commit-msg', `exec < /dev/tty && npx cz --hook || true`],
 		command: 'npx',
 		folder,
 	}).promise;

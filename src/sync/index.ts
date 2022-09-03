@@ -44,48 +44,37 @@ class Plugin extends BasePluginClass {
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
 		if (!isBranchInProgress) return null;
 		const confluxDeps = Object.keys(workspaceDependencies) || [];
-		const trim: string[] = [];
+		const syncingDepsNames: string[] = [];
+		const packageJsonDependencies: Record<string, string> = packageJson.dependencies || {};
+		const packageJsonDevDependencies: Record<string, string> = packageJson.devDependencies || {};
+
 		// All of the deps will be removed from package.json bcoz it is assumed that conflux dependencies will be exhausted while
 		// while building the project
 		// if they are not being used in npm build then maybe dont sync in which case it wont be removed
-		const correctDeps = confluxDeps
+		const syncingDeps = confluxDeps
 			.map((dependency) => {
-				const version = workspaceDependencies?.[dependency];
-				if (!version) return null;
-				const target = version.target || '';
-				if (!target.startsWith('git')) {
-					trim.push(dependency);
-					return `${dependency}${branch === 'master' ? '' : '@' + branch}`;
-				}
-				if (version.type !== 'github-release') {
-					trim.push(dependency);
-					return `${version}#${branch}`;
-				}
-				return null;
+				if (!packageJsonDependencies[dependency]) return null;
+				syncingDepsNames.push(dependency);
+				return `${dependency}${branch === 'master' ? '' : '@' + branch}`;
 			})
 			.filter((t) => t);
-		const githubReleaseDeps = confluxDeps
+		const syncingDevDeps = confluxDeps
 			.map((dependency) => {
-				const version = workspaceDependencies?.[dependency];
-				const target = version.target || '';
-
-				if (!version || !target.startsWith('git') || version.type !== 'github-release') return null;
-				trim.push(dependency);
-				return version.target;
+				if (!packageJsonDevDependencies[dependency]) return null;
+				syncingDepsNames.push(dependency);
+				return `${dependency}${branch === 'master' ? '' : '@' + branch}`;
 			})
 			.filter((t) => t);
-		const packageJsonDependencies: Record<string, string> = packageJson.dependencies || {};
 		const dependencies: Record<string, string> = {};
 		for (const dep in packageJsonDependencies) {
-			if (!trim.includes(dep)) {
+			if (!syncingDepsNames.includes(dep)) {
 				dependencies[dep] = packageJson.dependencies[dep];
 			}
 		}
-		const packageJsonDevDependencies: Record<string, string> = packageJson.devDependencies || {};
 		const devDependencies: Record<string, string> = {};
-		for (const dep in packageJsonDevDependencies) {
-			if (!trim.includes(dep)) {
-				devDependencies[dep] = packageJson.devDependencies[dep];
+		for (const developerDependency in packageJsonDevDependencies) {
+			if (!syncingDepsNames.includes(developerDependency)) {
+				devDependencies[developerDependency] = packageJson.devDependencies[developerDependency];
 			}
 		}
 		writeJSONFile('package.json', {
@@ -93,44 +82,21 @@ class Plugin extends BasePluginClass {
 			dependencies,
 			devDependencies,
 		});
-		if (!correctDeps.length) return null;
-		await this.chooseShellMethod(this._options.subcommand).method({
-			args: ['install', '--legacy-peer-deps', ...correctDeps],
-			command: 'npm',
-			folder: null,
-			shouldRunInCurrentFolder: true,
-		}).promise;
+		if (syncingDeps.length)
+			await this.chooseShellMethod(this._options.subcommand).method({
+				args: ['install', '--legacy-peer-deps', ...syncingDeps],
+				command: 'npm',
+				folder: null,
+				shouldRunInCurrentFolder: true,
+			}).promise;
+		if (syncingDevDeps.length)
+			await this.chooseShellMethod(this._options.subcommand).method({
+				args: ['install', '--legacy-peer-deps', '--save-dev', ...syncingDevDeps],
+				command: 'npm',
+				folder: null,
+				shouldRunInCurrentFolder: true,
+			}).promise;
 		// move to the end otherwise node_modules end up removing
-		await Promise.all(
-			githubReleaseDeps.map(async (deps) => {
-				const [_, userName, repoName] = deps.match(/([^/:]+)\/([^/]+)\.git$/);
-				const response = await fetch(`https://api.github.com/repos/${userName}/${repoName}/releases`);
-				const releases = (await response.json()) as GithubRelease[];
-				console.log(userName, repoName);
-				const release = releases.find((release) => release.target_commitish === branch);
-				if (!release) throw new Error('Release with tag' + branch + 'not found!');
-				const asset = release.assets.find((asset) => asset.name === 'dist.zip');
-				if (!asset) throw new Error('Release Found! File not found!');
-				const zip = path.join(process.cwd(), userName + repoName + '.zip');
-				console.log('Download url', asset.browser_download_url);
-				await download(asset.browser_download_url, zip);
-				const targetPath = path.join(process.cwd(), 'node_modules', 'mesh' + userName + repoName);
-				try {
-					console.log('Extracting ', zip, ' to ', targetPath);
-					await extract(zip, {
-						dir: targetPath,
-					});
-				} catch (e) {
-					console.log(e);
-					throw e;
-				}
-				const packageJson2 = readJSONFile(path.join('node_modules', 'mesh' + userName + repoName, 'package.json'));
-				if (!packageJson2) return;
-				console.log(targetPath, packageJson2.name, path.join(process.cwd(), 'node_modules', packageJson2.name));
-				fse.moveSync(targetPath, path.join(process.cwd(), 'node_modules', packageJson2.name), { overwrite: true });
-				return;
-			})
-		);
 	}
 	async syncDirs(directory: string) {
 		const dir = path.join(process.cwd(), 'node_modules', directory);

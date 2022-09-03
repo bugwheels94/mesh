@@ -41,7 +41,7 @@ export const addPrettier = async function (plugin: Plugin) {
 		folder,
 	}).promise;
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['husky', 'add', '.husky/pre-commit', `"npx lint-staged"`],
+		args: ['husky', 'add', '.husky/pre-commit', `npx lint-staged`],
 		command: 'npx',
 		folder,
 	}).promise;
