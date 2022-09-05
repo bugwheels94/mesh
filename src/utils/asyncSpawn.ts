@@ -49,6 +49,7 @@ export const asyncSpawn =
 			obj.process = spawn(command, args, {
 				...finalOptions,
 				env: process.env,
+				shell: true,
 			});
 			writePermanentText(
 				folderPath,
