@@ -22,7 +22,7 @@ export const addCommitizen = async function (plugin: Plugin) {
 		folder,
 	}).promise;
 	await plugin.chooseShellMethod(subcommand).method({
-		args: ['set-script', 'prepare', 'husky install'],
+		args: ['set-script', 'prepare', '"husky install"'],
 		command: 'npm',
 		folder,
 	}).promise;
@@ -32,7 +32,7 @@ export const addCommitizen = async function (plugin: Plugin) {
 		folder,
 	}).promise;
 	// Generate the config manually because package.json config path is incorrect in case of npm workspaces
-	writeJSONFile(path.join(process.cwd(), folder.path, '.czrc'), {
+	writeJSONFile(path.join(folder.path, '.czrc'), {
 		path: 'cz-conventional-changelog',
 	});
 	return plugin.chooseShellMethod(subcommand).method({
