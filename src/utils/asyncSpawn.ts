@@ -1,5 +1,5 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import path from 'path';
+
 import throttle from 'lodash.throttle';
 
 import { Config, globalConfig, writeIndentedText, writeLogicalText, writePermanentText } from './util';
@@ -36,7 +36,7 @@ export const asyncSpawn =
 			...optionsByCommand,
 		};
 		const folderPath = folder === null ? '' : folder.path;
-		if (!finalOptions.shouldRunInCurrentFolder) finalOptions.cwd = path.join(process.cwd(), folderPath);
+		if (!finalOptions.shouldRunInCurrentFolder) finalOptions.cwd = folderPath;
 		else finalOptions.cwd = process.cwd();
 
 		obj.promise = new Promise(function (resolve, reject) {

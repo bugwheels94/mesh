@@ -28,6 +28,7 @@ class Plugin extends BasePluginClass {
 			: process.env.BRANCH_NAME
 			? process.env.BRANCH_NAME
 			: 'master';
+		console.log(branch);
 		const packageJson = readJSONFile('package.json');
 		const workspaceDependencies: ConfluxRC = packageJson.syncWorkspaceDependencies || {};
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
@@ -40,6 +41,7 @@ class Plugin extends BasePluginClass {
 		// All of the deps will be removed from package.json bcoz it is assumed that conflux dependencies will be exhausted while
 		// while building the project
 		// if they are not being used in npm build then maybe dont sync in which case it wont be removed
+		console.log(packageJsonDevDependencies);
 		const syncingDeps = confluxDeps
 			.map((dependency) => {
 				if (!packageJsonDependencies[dependency]) return null;
