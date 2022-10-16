@@ -9,10 +9,6 @@ export const localConfig = {
 			alias: 'add',
 		},
 		{
-			name: './version',
-			alias: 'version',
-		},
-		{
 			name: './git',
 			alias: 'git',
 		},
@@ -23,6 +19,10 @@ export const localConfig = {
 		{
 			name: './sync',
 			alias: 'sync',
+		},
+		{
+			name: './projects',
+			alias: 'projects',
 		},
 	],
 };

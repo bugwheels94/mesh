@@ -10,7 +10,7 @@ export const addFolder = async function () {
 		{
 			type: 'input',
 			name: 'path',
-			message: `Enter the Folder Path`,
+			message: `Enter the Absolute Folder Path`,
 		},
 		{
 			type: 'input',
@@ -20,7 +20,7 @@ export const addFolder = async function () {
 		{
 			type: 'checkbox',
 			name: 'plugins',
-			message: `Select the plugins to Enable`,
+			message: `Select the plugins to Disable, if any`,
 			choices: config.plugins.map((plugin) => plugin.alias),
 		},
 		{
@@ -44,7 +44,7 @@ export const addFolder = async function () {
 		path: answers.path,
 		groups: uniq([...answers.groups, ...(answers.newGroups ? answers.newGroups.split(',') : [])]),
 		plugins: answers.plugins.reduce((acc, plugin) => {
-			acc[plugin] = {};
+			acc[plugin] = false;
 			return acc;
 		}, {}),
 	});

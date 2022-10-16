@@ -1,11 +1,6 @@
-// import util from 'util';
-
-import fs from 'fs';
-import path from 'path';
-
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
-import { config, ConfluxRC, readJSONFile, ShellTypes, writeJSONFile } from '../utils/util';
+import { ConfluxRC, readJSONFile, ShellTypes, writeJSONFile } from '../utils/util';
 // const execPromise = util.promisify(exec);
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
@@ -22,7 +17,19 @@ class Plugin extends BasePluginClass {
 		}
 		return null;
 	}
-	async syncDependencies() {
+	chooseShellMethod(command: string) {
+		switch (command) {
+			default:
+				return {
+					type: ShellTypes.ASYNC,
+					method: asyncSpawn({
+						stdio: 'inherit',
+						shouldRunInCurrentFolder: true,
+					}),
+				};
+		}
+	}
+	private async syncDependencies() {
 		const branch = process.env.GITHUB_REF
 			? process.env.GITHUB_REF.split('/').slice(2).join('/')
 			: process.env.BRANCH_NAME
@@ -88,41 +95,6 @@ class Plugin extends BasePluginClass {
 				shouldRunInCurrentFolder: true,
 			}).promise;
 		// move to the end otherwise node_modules end up removing
-	}
-	async syncDirs(directory: string) {
-		const dir = path.join(process.cwd(), 'node_modules', directory);
-		if (!fs.existsSync(dir)) {
-			fs.mkdirSync(dir, { recursive: true });
-		}
-		const binaries = fs.readdirSync(dir, { withFileTypes: true });
-		const folders = config.folders.map((folder) => folder.path);
-		binaries.forEach((file) => {
-			folders.forEach((folder) => {
-				const localNodeModules = path.join(process.cwd(), folder, 'node_modules', directory);
-				if (!fs.existsSync(localNodeModules)) {
-					fs.mkdirSync(localNodeModules, { recursive: true });
-				}
-				if (!fs.existsSync(path.join(localNodeModules, file.name)) && !folders.includes(file.name)) {
-					// file and folder same means already a symlink
-					try {
-						fs.symlinkSync(path.join(dir, file.name), path.join(localNodeModules, file.name));
-					} catch (e) {}
-				}
-			});
-		});
-		return null;
-	}
-	chooseShellMethod(command: string) {
-		switch (command) {
-			default:
-				return {
-					type: ShellTypes.ASYNC,
-					method: asyncSpawn({
-						stdio: 'inherit',
-						shouldRunInCurrentFolder: true,
-					}),
-				};
-		}
 	}
 }
 export default Plugin;

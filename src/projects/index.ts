@@ -1,31 +1,30 @@
 // import util from 'util';
 
+import { addFolder } from '../projects/add-folder';
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
 import { ShellTypes } from '../utils/util';
 
 // const execPromise = util.promisify(exec);
 import './prettier';
-import { addCommitizen } from './commitizen';
-import { addPrettier } from './prettier';
-import { addSemantic } from './semantic';
+import { listFolders } from './list-folders';
+import { listProjects } from './list-projects';
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
 		super(options);
 		this.checkCommandExist('npm');
 	}
-
+	static doesRequireFolder({ subcommand }: Parameters<typeof BasePluginClass.doesRequireFolder>[0]) {
+		if (['list', 'add-folder', 'list-folders'].includes(subcommand)) return false;
+		return true;
+	}
+	async runOnAll() {
+		if (this._options.subcommand === 'list') return listProjects();
+		if (this._options.subcommand === 'add-folder') return addFolder();
+		if (this._options.subcommand === 'list-folders') return listFolders(this);
+	}
 	run() {
 		const { folder, args, subcommand } = this._options;
-		if (subcommand === 'commitizen') {
-			return { promise: addCommitizen(this), folder };
-		}
-		if (subcommand === 'prettier') {
-			return { promise: addPrettier(this), folder };
-		}
-		if (subcommand === 'semantic-release') {
-			return { promise: addSemantic(this), folder };
-		}
 		return this.chooseShellMethod(subcommand).method({
 			args: args,
 			command: 'npm',

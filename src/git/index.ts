@@ -1,7 +1,6 @@
 // import util from 'util';
 import shell, { exec } from 'shelljs';
 
-import dargs from '../dargs';
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
 import { cdToFolder, ShellTypes, writeLogicalText } from '../utils/util';
@@ -35,9 +34,7 @@ class Plugin extends BasePluginClass {
 				if (argv['b']) {
 					writeLogicalText(folder.path, `Branch "${argv['b']}" already exists, switching to "${argv['b']}"`);
 					process.stdout.write('\n');
-
-					argv['_'].push(argv['b']);
-					delete argv['b'];
+					rawArgs = args.slice(args.indexOf('-b'), 1);
 				}
 			} else {
 				// Branch Does not exist
@@ -45,11 +42,9 @@ class Plugin extends BasePluginClass {
 					writeLogicalText(folder.path, `Branch "${argv['_'][1]}" does not exist, creating "${argv['_'][1]}"`);
 
 					process.stdout.write('\n');
-					argv.b = argv['_'][1];
-					argv['_'].pop();
+					rawArgs.unshift('-b');
 				}
 			}
-			rawArgs = dargs(argv, { useEquals: false, allowCamelCase: true });
 		}
 		return this.chooseShellMethod(subcommand).method({
 			args: rawArgs,
