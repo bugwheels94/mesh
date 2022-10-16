@@ -62,12 +62,13 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 
 	segregated.remaining._ = segregated.remaining._.slice(0);
 	const args = segregated.mainCommandOptions;
-	const globalPluginConfig = [...localConfig.plugins, ...(config.plugins || [])].find(({ alias }) => alias === command);
+	const globalPluginConfig = [...localConfig.plugins, ...(config.plugins || [])].find(
+		({ alias }) => alias === command
+	) || {
+		name: './generic',
+		alias: 'na',
+	};
 
-	if (!globalPluginConfig) {
-		console.log('Global Config missing');
-		process.exit();
-	}
 	const Plugin = (await import(globalPluginConfig.name)).default;
 
 	const filteredFolders = folders.filter(filterByConfluxGroups(segregated.cfx)).filter((folder) => {

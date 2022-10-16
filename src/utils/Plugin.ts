@@ -35,8 +35,8 @@ export abstract class BasePluginClass {
 		this._options = _options;
 		// super(options);
 	}
-	static doesRequireFolder({ command, subcommand }: { command: string; subcommand: string }): boolean {
-		console.log(command, subcommand);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	static doesRequireFolder(_param: { command: string; subcommand: string }): boolean {
 		return true;
 	}
 
@@ -52,6 +52,7 @@ export abstract class BasePluginClass {
 	async runOnAll(): Promise<string> {
 		return null;
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	chooseShellMethod(_subcommand: string): IProcessFunction {
 		return {
 			type: ShellTypes.SYNC,

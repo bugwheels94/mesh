@@ -3,17 +3,14 @@ export const localConfig = {
 		{
 			name: './npm',
 			alias: 'npm',
-			folderSpecific: true,
 		},
 		{
 			name: './add',
 			alias: 'add',
-			folderSpecific: true,
 		},
 		{
 			name: './git',
 			alias: 'git',
-			folderSpecific: true,
 		},
 		{
 			name: './set',
