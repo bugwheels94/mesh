@@ -7,10 +7,14 @@ import minimist from 'minimist';
 import fetch from 'node-fetch';
 import shell from 'shelljs';
 
+export const delay = (n = 5000) =>
+	new Promise((resolve) => {
+		setTimeout(resolve, n);
+	});
 export type Config = {
 	parameters?: minimist.ParsedArgs;
 	folders?: {
-		plugins: Record<
+		plugins?: Record<
 			string,
 			{
 				blacklist?: string[];
@@ -19,8 +23,7 @@ export type Config = {
 		>;
 		name: string;
 		path: string;
-		groups: string[];
-		url: string;
+		groups?: string[];
 	}[];
 	plugins?: {
 		name: string;
@@ -29,7 +32,13 @@ export type Config = {
 	workspaces?: string[];
 };
 export type ConfluxRC = {
-	dependencies?: Record<string, 'github-release' | 'npm' | 'github'>;
+	dependencies?: Record<
+		string,
+		{
+			type: 'github-release' | 'npm' | 'github';
+			target: string;
+		}
+	>;
 };
 export type Await<T> = T extends PromiseLike<infer U> ? U : T;
 export const download = function (url: string, dest: string) {
@@ -52,8 +61,12 @@ export const readRCFile = (fileName: string) => {
 };
 export const readJSONFile = (fileName: string) => {
 	try {
+		console.log('final', path.join(process.cwd(), fileName));
 		return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'));
 	} catch (e) {
+		writePermanentText('Error', 'Cannot read File ' + fileName, {
+			isError: true,
+		});
 		return null;
 	}
 };
@@ -63,7 +76,6 @@ export const writeJSONFile = (address: string, object: Record<string, unknown>) 
 export const writeRCFile = (address: string, data: string) => {
 	fs.writeFileSync(address, data);
 };
-export const config: Config = readJSONFile('package.json') || {};
 export const getRepos = (folders: Config['folders']) => {
 	return folders.filter((folder) => folder.plugins.git).map((folder) => folder.path);
 };
@@ -90,7 +102,7 @@ export function isProcess<T>(obj: T): obj is T & { process: ChildProcess } {
 	return obj && 'process' in obj;
 }
 export const sanitizeText = (str: string) => {
-	return str.toString().replace(/^\s+|\s+$/g, '');
+	return (str || '').replace(/^\s+|\s+$/g, '');
 };
 export const writeIndentedText = (heading: string, text: string, options?: TextOptions) => {
 	clearCurrentLine();
@@ -137,3 +149,5 @@ export interface Constructable<T> {
 export const globalConfig = {
 	disableStdout: false,
 };
+export const kebabToCamel = (s: string) => s.replace(/-./g, (x) => x[1].toUpperCase());
+export const config: Config = readJSONFile('package.json') || {};

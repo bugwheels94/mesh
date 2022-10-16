@@ -2,14 +2,14 @@
 
 import path from 'path';
 
-import dargs from '../dargs';
-import SyncPlugin from '../sync';
+import dargs from 'dargs';
+
 import { Folder } from '../utils/Folder';
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
 import { readRCFile, ShellTypes, writePermanentText, writeRCFile } from '../utils/util';
 
-import { generateBundle } from './generateBundle';
+import { zipNpmFiles } from './generateBundle';
 // const execPromise = util.promisify(exec);
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
@@ -17,19 +17,80 @@ class Plugin extends BasePluginClass {
 		this.checkCommandExist('npm');
 	}
 	static doesRequireFolder({ subcommand }: Parameters<typeof BasePluginClass.doesRequireFolder>[0]) {
-		console.log(subcommand);
-		if (subcommand === 'install' || subcommand === 'generate-bundle') return false;
+		if (['install', 'i', 'version-all'].includes(subcommand)) return false;
 		return true;
 	}
 	async runOnAll() {
 		if (this._options.subcommand === 'install' || this._options.subcommand === 'i') {
 			return this.install();
-		} else if (this._options.subcommand === 'generate-bundle') {
-			return generateBundle();
+		} else if (this._options.subcommand === 'zip-npm-files') {
+			return zipNpmFiles();
 		}
 		return null;
 	}
-	async install() {
+
+	run() {
+		const { folder, args, subcommand } = this._options;
+		return this.chooseShellMethod(subcommand).method({
+			args: args,
+			command: 'npm',
+			folder,
+		});
+	}
+	chooseShellMethod(command: string) {
+		switch (command) {
+			case 'install':
+			case 'i':
+				return {
+					type: ShellTypes.ASYNC,
+					method: asyncSpawn({
+						stdio: 'inherit',
+						shouldRunInCurrentFolder: true,
+					}),
+				};
+			case 'zip-npm-files':
+				return {
+					type: ShellTypes.ASYNC,
+					method: asyncSpawn({
+						stdio: 'inherit',
+						shouldRunInCurrentFolder: true,
+					}),
+				};
+			case 'test':
+			case 'build':
+				return {
+					type: ShellTypes.ASYNC,
+					method: asyncSpawn({ stdio: 'pipe' }),
+				};
+			case 'run':
+			case 'start':
+			case 'version':
+				return {
+					type: ShellTypes.ASYNC,
+					method: asyncSpawn({
+						stdio: 'pipe',
+						hideOutputAtEnd: true,
+					}),
+				};
+
+			case 'init':
+				return {
+					type: ShellTypes.VIRTUAL_SYNC,
+					method: asyncSpawn({ stdio: 'inherit' }),
+				};
+			case 'publish':
+				return {
+					type: ShellTypes.VIRTUAL_SYNC,
+					method: asyncSpawn({ stdio: 'pipe' }),
+				};
+			default:
+				return {
+					type: ShellTypes.VIRTUAL_SYNC,
+					method: asyncSpawn({ stdio: 'inherit' }),
+				};
+		}
+	}
+	private async install() {
 		const { argv, subcommand, args } = this._options;
 		const npmrc = this._options.folders
 			.map((folder) => {
@@ -60,64 +121,6 @@ class Plugin extends BasePluginClass {
 				folder: null,
 				shouldRunInCurrentFolder: true,
 			}).promise;
-		}
-		const syncPlugin = new SyncPlugin(this._options);
-		return syncPlugin.syncSymlinksAndTypes().then((_) => 'Done');
-	}
-	async run() {
-		const { folder, args, subcommand } = this._options;
-
-		return this.chooseShellMethod(subcommand).method({
-			args: args,
-			command: 'npm',
-			folder,
-		});
-	}
-	chooseShellMethod(command: string) {
-		switch (command) {
-			case 'install':
-			case 'i':
-				return {
-					type: ShellTypes.ASYNC,
-					method: asyncSpawn({
-						stdio: 'inherit',
-						shouldRunInCurrentFolder: true,
-					}),
-				};
-			case 'generate-bundle':
-				return {
-					type: ShellTypes.ASYNC,
-					method: asyncSpawn({
-						stdio: 'inherit',
-						shouldRunInCurrentFolder: true,
-					}),
-				};
-			case 'test':
-			case 'build':
-				return {
-					type: ShellTypes.ASYNC,
-					method: asyncSpawn({ stdio: 'pipe' }),
-				};
-			case 'run':
-			case 'start':
-				return {
-					type: ShellTypes.ASYNC,
-					method: asyncSpawn({
-						stdio: 'pipe',
-						hideOutputAtEnd: true,
-					}),
-				};
-
-			case 'init':
-				return {
-					type: ShellTypes.VIRTUAL_SYNC,
-					method: asyncSpawn({ stdio: 'pipe' }),
-				};
-			default:
-				return {
-					type: ShellTypes.VIRTUAL_SYNC,
-					method: asyncSpawn({ stdio: 'inherit' }),
-				};
 		}
 	}
 }

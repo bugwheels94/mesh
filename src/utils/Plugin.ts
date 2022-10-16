@@ -35,8 +35,8 @@ export abstract class BasePluginClass {
 		this._options = _options;
 		// super(options);
 	}
-	static doesRequireFolder({ command, subcommand }: { command: string; subcommand: string }): boolean {
-		console.log(command, subcommand);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	static doesRequireFolder(_param: { command: string; subcommand: string }): boolean {
 		return true;
 	}
 
@@ -46,14 +46,13 @@ export abstract class BasePluginClass {
 			shell.exit(1);
 		}
 	}
-	async run(): Promise<
-		ReturnType<ReturnType<typeof asyncSpawn>> | { promise: Promise<string>; folder: Config['folders'][0] }
-	> {
+	run(): ReturnType<ReturnType<typeof asyncSpawn>> {
 		return null;
 	}
 	async runOnAll(): Promise<string> {
 		return null;
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	chooseShellMethod(_subcommand: string): IProcessFunction {
 		return {
 			type: ShellTypes.SYNC,
