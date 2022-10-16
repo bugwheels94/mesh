@@ -2,7 +2,8 @@
 
 import path from 'path';
 
-import dargs from '../dargs';
+import dargs from 'dargs';
+
 import { Folder } from '../utils/Folder';
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
@@ -27,39 +28,7 @@ class Plugin extends BasePluginClass {
 		}
 		return null;
 	}
-	async install() {
-		const { argv, subcommand, args } = this._options;
-		const npmrc = this._options.folders
-			.map((folder) => {
-				return readRCFile(path.join(folder.path, '.npmrc'));
-			})
-			.join('\n');
-		writeRCFile('.npmrc', npmrc);
-		if (argv._.length === 1) {
-			await this.chooseShellMethod(subcommand).method({
-				args: args,
-				command: 'npm',
-				folder: null,
-				shouldRunInCurrentFolder: true,
-			}).promise;
-		} else {
-			const folder = new Folder(this._options);
-			const selectedFolders = await folder.chooseFolders();
-			argv['w'] = selectedFolders.map((folder) => folder.path);
-			if (!selectedFolders.length) {
-				writePermanentText('npm', 'Please Select at least 1 folder', {
-					isError: true,
-				});
-				return null;
-			}
-			await this.chooseShellMethod(subcommand).method({
-				args: dargs(argv, { useEquals: false }),
-				command: 'npm',
-				folder: null,
-				shouldRunInCurrentFolder: true,
-			}).promise;
-		}
-	}
+
 	run() {
 		const { folder, args, subcommand } = this._options;
 		return this.chooseShellMethod(subcommand).method({
@@ -107,7 +76,7 @@ class Plugin extends BasePluginClass {
 			case 'init':
 				return {
 					type: ShellTypes.VIRTUAL_SYNC,
-					method: asyncSpawn({ stdio: 'pipe' }),
+					method: asyncSpawn({ stdio: 'inherit' }),
 				};
 			case 'publish':
 				return {
@@ -119,6 +88,39 @@ class Plugin extends BasePluginClass {
 					type: ShellTypes.VIRTUAL_SYNC,
 					method: asyncSpawn({ stdio: 'inherit' }),
 				};
+		}
+	}
+	private async install() {
+		const { argv, subcommand, args } = this._options;
+		const npmrc = this._options.folders
+			.map((folder) => {
+				return readRCFile(path.join(folder.path, '.npmrc'));
+			})
+			.join('\n');
+		writeRCFile('.npmrc', npmrc);
+		if (argv._.length === 1) {
+			await this.chooseShellMethod(subcommand).method({
+				args: args,
+				command: 'npm',
+				folder: null,
+				shouldRunInCurrentFolder: true,
+			}).promise;
+		} else {
+			const folder = new Folder(this._options);
+			const selectedFolders = await folder.chooseFolders();
+			argv['w'] = selectedFolders.map((folder) => folder.path);
+			if (!selectedFolders.length) {
+				writePermanentText('npm', 'Please Select at least 1 folder', {
+					isError: true,
+				});
+				return null;
+			}
+			await this.chooseShellMethod(subcommand).method({
+				args: dargs(argv, { useEquals: false }),
+				command: 'npm',
+				folder: null,
+				shouldRunInCurrentFolder: true,
+			}).promise;
 		}
 	}
 }

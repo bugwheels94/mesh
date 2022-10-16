@@ -76,7 +76,6 @@ export const writeJSONFile = (address: string, object: Record<string, unknown>) 
 export const writeRCFile = (address: string, data: string) => {
 	fs.writeFileSync(address, data);
 };
-export const config: Config = readJSONFile('package.json') || {};
 export const getRepos = (folders: Config['folders']) => {
 	return folders.filter((folder) => folder.plugins.git).map((folder) => folder.path);
 };
@@ -103,7 +102,7 @@ export function isProcess<T>(obj: T): obj is T & { process: ChildProcess } {
 	return obj && 'process' in obj;
 }
 export const sanitizeText = (str: string) => {
-	return str.toString().replace(/^\s+|\s+$/g, '');
+	return (str || '').replace(/^\s+|\s+$/g, '');
 };
 export const writeIndentedText = (heading: string, text: string, options?: TextOptions) => {
 	clearCurrentLine();
@@ -151,3 +150,4 @@ export const globalConfig = {
 	disableStdout: false,
 };
 export const kebabToCamel = (s: string) => s.replace(/-./g, (x) => x[1].toUpperCase());
+export const config: Config = readJSONFile('package.json') || {};

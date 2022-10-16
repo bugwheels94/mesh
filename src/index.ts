@@ -1,66 +1,82 @@
-#!/usr/bin/env node
-
+#!/usr/bin/env node --experimental-specifier-resolution=node
 // import keypress from 'keypress';
 import minimist from 'minimist';
 import { intersection } from 'ramda';
 import kill from 'tree-kill';
 
-import dargs from './dargs/index';
 import { Folder } from './utils/Folder';
 import { BasePluginClass } from './utils/Plugin';
 import { localConfig } from './utils/config';
-import { Await, config, Config, globalConfig, kebabToCamel, writeLogicalText } from './utils/util';
-const argv = minimist(process.argv.slice(2));
-const command = argv._.shift();
-const globalPluginConfig = [...localConfig.plugins, ...(config.plugins || [])].find(({ alias }) => alias === command);
+import { Await, config, Config, globalConfig, writeLogicalText, writePermanentText } from './utils/util';
 
-if (!globalPluginConfig) {
-	console.log('Global Config missing');
-	process.exit();
-}
-
-if (!command) {
-	process.exit();
-}
-const segregateConfluxArgs = (argv: minimist.ParsedArgs) => {
-	return Object.keys(argv).reduce(
-		(acc, current) => {
-			if (current.startsWith('cfx-')) {
-				acc.cfx[kebabToCamel(current.slice(4))] = argv[current];
+const segregateConfluxArgs = (properArgv: string[]) => {
+	let isPrevousIndependentToken = true;
+	let mainCommandStartIndex = 0;
+	for (let i = 0; i < properArgv.length; i++) {
+		// match start independent token
+		if (properArgv[i].match(/^[^-]/)) {
+			if (isPrevousIndependentToken) {
+				mainCommandStartIndex = i;
+				console.log(i, 'MM', properArgv[i]);
+				break;
 			} else {
-				acc.remaining[current] = argv[current];
+				isPrevousIndependentToken = true;
 			}
-			return acc;
-		},
-		{
-			cfx: {} as minimist.ParsedArgs,
-			remaining: {} as minimist.ParsedArgs,
+		} else if (properArgv[i].match(/^-.*=/)) {
+			isPrevousIndependentToken = true;
+		} else {
+			isPrevousIndependentToken = false;
 		}
-	);
+	}
+
+	const meshCommandOptions = properArgv.slice(0, mainCommandStartIndex);
+	const mainCommandWithOptions = properArgv.slice(mainCommandStartIndex);
+	return {
+		remaining: minimist(mainCommandWithOptions.slice(1)),
+		mainCommandOptions: mainCommandWithOptions.slice(1),
+		mainCommand: mainCommandWithOptions[0],
+		meshCommandOptions,
+		cfx: minimist(meshCommandOptions),
+	};
 };
-const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => (folder: Config['folders'][0]) => {
-	const groups = folder.groups;
-	const finalGroups = Array.isArray(groups) ? groups : [groups];
-	const confluxGroups =
-		confluxArgs['group'] || confluxArgs['groups'] || config.parameters?.group || config.parameters?.groups;
-	if (!confluxGroups) return true;
-	const finalConfluxGroups = Array.isArray(confluxGroups) ? confluxGroups : [confluxGroups];
-	return intersection(finalGroups, finalConfluxGroups).length > 0;
+const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
+	const confluxGroups = confluxArgs['group'] || confluxArgs['g'] || config.parameters?.group;
+	writePermanentText('Current Project', confluxGroups);
+	process.stdout.write('\n');
+	return (folder: Config['folders'][0]) => {
+		const groups = folder.groups;
+		const finalGroups = Array.isArray(groups) ? groups : [groups];
+
+		if (!confluxGroups) return true;
+		const finalConfluxGroups = Array.isArray(confluxGroups) ? confluxGroups : [confluxGroups];
+		return intersection(finalGroups, finalConfluxGroups).length > 0;
+	};
 };
 (async () => {
-	const Plugin = (await import(globalPluginConfig.name)).default;
 	const folders = config.folders || [];
-	const segregated = segregateConfluxArgs(argv);
-	const args = dargs(segregated.remaining, {
-		useEquals: false,
-		allowCamelCase: true,
-	});
+	const segregated = segregateConfluxArgs(process.argv.slice(2));
+
 	type T = string | null;
-	const subcommand: T = argv._.length ? argv._[0] : null;
+	const command: T = segregated.mainCommand;
+	const subcommand: T = segregated.remaining._.length ? segregated.remaining._[0] : null;
+
+	segregated.remaining._ = segregated.remaining._.slice(0);
+	const args = segregated.mainCommandOptions;
+	const globalPluginConfig = [...localConfig.plugins, ...(config.plugins || [])].find(({ alias }) => alias === command);
+
+	if (!globalPluginConfig) {
+		console.log('Global Config missing');
+		process.exit();
+	}
+	const Plugin = (await import(globalPluginConfig.name)).default;
+
 	const filteredFolders = folders.filter(filterByConfluxGroups(segregated.cfx)).filter((folder) => {
 		if (folder.plugins?.[globalPluginConfig.alias] === undefined) {
 			return true;
 		} // if no plugins means no local config then means enable
+		if (folder.plugins?.[globalPluginConfig.alias] === false) {
+			return false;
+		} // if explicit false then disable whole plugin
 		const localPluginConfig = folder.plugins[globalPluginConfig.alias];
 		const blacklists = localPluginConfig.blacklist || [];
 		return !blacklists.includes(subcommand);
