@@ -3,9 +3,10 @@ import path from 'path';
 import inquirer from 'inquirer';
 import { uniq } from 'ramda';
 
-import { config, writeJSONFile } from '../utils/util';
+import { getConfig, writeJSONFile } from '../utils/util';
 
 export const addFolder = async function () {
+	const config = getConfig();
 	const answers = await inquirer.prompt([
 		{
 			type: 'input',

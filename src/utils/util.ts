@@ -61,7 +61,6 @@ export const readRCFile = (fileName: string) => {
 };
 export const readJSONFile = (fileName: string) => {
 	try {
-		console.log('final', path.join(process.cwd(), fileName));
 		return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'));
 	} catch (e) {
 		writePermanentText('Error', 'Cannot read File ' + fileName, {
@@ -150,4 +149,4 @@ export const globalConfig = {
 	disableStdout: false,
 };
 export const kebabToCamel = (s: string) => s.replace(/-./g, (x) => x[1].toUpperCase());
-export const config: Config = readJSONFile('package.json') || {};
+export const getConfig = (): Config => readJSONFile('package.json');
