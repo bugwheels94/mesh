@@ -24,15 +24,15 @@ From the folder in which your root package.json is created, run a command `mesh 
 
 After you run the Step1 command for all of the folders(repos) that you wanna add then you can start using mesh commands like
 
-mesh -g GROUP_NAME git add . # this command will run git add . in all of your repos
-mesh -g GROUP_NAME git commit # this command will run git add . in all of your repos
+    mesh -g GROUP_NAME git add . # this command will run git add . in all of your repos.
+    mesh -g GROUP_NAME git commit # this command will run git add . in all of your repos.
 
-mesh -g GROUP_NAME add commitizen # adds commitizen to your repo in SINGLE command
-mesh -g GROUP_NAME add semantic-release # adds semantic-release to your repo in SINGLE command
-mesh -g GROUP_NAME add prettier # adds prettier to your repo in SINGLE command
+    mesh -g GROUP_NAME add commitizen # adds commitizen to your repo in SINGLE command.
+    mesh -g GROUP_NAME add semantic-release # adds semantic-release to your repo in SINGLE command.
+    mesh -g GROUP_NAME add prettier # adds prettier to your repo in SINGLE command
 
-If all of your repos have same npm command, lets say 'start:dev' then you can run `mesh -g GROUP_NAME npm run start:dev`
+If all of your repos have same npm command, lets say `start:watch` then you can run `mesh -g GROUP_NAME npm run start:watch`
 
 Based on the same above concept, you can use github's gh like `mesh -g GROUP_NAME gh pr create`
 
-If you dont wanna mention `-g GROUP_NAME` then you can also do `mesh set -g GROUP_NAME` and then omit writing -g everytime
+**Note:** If you dont wanna mention `-g GROUP_NAME` then you can also do `mesh set -g GROUP_NAME` and then omit writing `-g` everytime
