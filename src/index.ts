@@ -7,7 +7,7 @@ import kill from 'tree-kill';
 import { Folder } from './utils/Folder';
 import { BasePluginClass } from './utils/Plugin';
 import { localConfig } from './utils/config';
-import { Await, config, Config, globalConfig, writeLogicalText, writePermanentText } from './utils/util';
+import { Await, Config, getConfig, globalConfig, writeLogicalText, writePermanentText } from './utils/util';
 
 const segregateConfluxArgs = (properArgv: string[]) => {
 	let isPrevousIndependentToken = true;
@@ -40,6 +40,8 @@ const segregateConfluxArgs = (properArgv: string[]) => {
 	};
 };
 const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
+	const config = getConfig();
+
 	const confluxGroups = confluxArgs['group'] || confluxArgs['g'] || config.parameters?.group;
 	writePermanentText('Current Project', confluxGroups);
 	process.stdout.write('\n');
@@ -53,6 +55,8 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 	};
 };
 (async () => {
+	const config = getConfig();
+	if (config === null) return;
 	const folders = config.folders || [];
 	const segregated = segregateConfluxArgs(process.argv.slice(2));
 
