@@ -1,11 +1,11 @@
 // import util from 'util';
-import shell, { exec } from 'shelljs';
+import shell from 'shelljs';
 
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
 import { cdToFolder, ShellTypes, writeLogicalText } from '../utils/util';
 // const execPromise = util.promisify(exec);
-
+const { exec } = shell;
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
 		super(options);
