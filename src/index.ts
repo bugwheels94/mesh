@@ -1,5 +1,3 @@
-#!/usr/bin/env node --experimental-specifier-resolution=node
-// import keypress from 'keypress';
 import minimist from 'minimist';
 import { intersection } from 'ramda';
 import kill from 'tree-kill';
