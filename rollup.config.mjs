@@ -32,7 +32,6 @@ const isPackageDependency = (pkg, path, importer = '') => {
 // process.exit();
 const config = (input, { extractDependency, extractTests } = {}) => {
 	let output = path.join('./dist', 'es', input.replace('/src', '').replace(/\.(tsx|ts)/, '.js'));
-	console.log(output);
 	let format = 'cjs';
 
 	// we only compile css files because component themes are stored in them and we need them in final theme
