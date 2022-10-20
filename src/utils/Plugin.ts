@@ -19,7 +19,7 @@ export interface IProcessFunction {
 
 export type PluginArguments = {
 	readonly argv: minimist.ParsedArgs;
-	readonly folder?: Config['folders'][0];
+	readonly folder: Exclude<Config['folders'], null | undefined>[0];
 	readonly folders: Config['folders'];
 
 	readonly args: string[];
@@ -28,9 +28,9 @@ export type PluginArguments = {
 	shouldCheckCommandExistence?: boolean;
 };
 export abstract class BasePluginClass {
-	result: ReturnType<ReturnType<typeof asyncSpawn>> = null;
-	promisedResult: Promise<string> = null;
-	_options: PluginArguments = null;
+	result: ReturnType<ReturnType<typeof asyncSpawn>>;
+	promisedResult: Promise<string | null>;
+	_options: PluginArguments;
 	constructor(_options: PluginArguments) {
 		this._options = _options;
 		// super(options);
@@ -46,17 +46,17 @@ export abstract class BasePluginClass {
 			shell.exit(1);
 		}
 	}
-	run(): ReturnType<ReturnType<typeof asyncSpawn>> {
-		return null;
-	}
-	async runOnAll(): Promise<string> {
-		return null;
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	//@ts-ignore
+	run(): ReturnType<ReturnType<typeof asyncSpawn>> {}
+	async runOnAll(): Promise<string | null | undefined> {
+		return '';
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	chooseShellMethod(_subcommand: string): IProcessFunction {
 		return {
 			type: ShellTypes.SYNC,
-			method: asyncSpawn.bind(null, { stdio: 'inherit' }),
+			method: asyncSpawn.bind(null, { stdio: 'inherit' })(),
 		};
 	}
 }

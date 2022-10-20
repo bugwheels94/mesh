@@ -19,15 +19,15 @@ export const asyncSpawn =
 		folder,
 		...opts
 	}: {
-		folder: Config['folders'][0] | null;
+		folder: Exclude<Config['folders'], null | undefined>[0] | null;
 		command: string;
 		args: string[];
 	} & SpawnOptions &
 		CommonOptions) => {
 		const obj: {
 			process?: ChildProcess;
-			promise?: Promise<string>;
-			folder?: Config['folders'][0] | null;
+			promise?: Promise<string | undefined>;
+			folder?: Exclude<Config['folders'], null | undefined>[0] | null;
 		} = {
 			folder,
 		};
@@ -67,9 +67,9 @@ export const asyncSpawn =
 					process.stdin.setRawMode(true);
 				}
 				// process.stdin.resume();
-				process.stdin.pipe(obj.process.stdin);
-				let buffer = [],
-					errorBuffer = [];
+				if (obj.process?.stdin) process.stdin.pipe(obj.process.stdin);
+				let buffer: Buffer[] = [],
+					errorBuffer: Buffer[] = [];
 				const printStream = () => {
 					if (globalConfig.disableStdout) return;
 					if (buffer.length) {
@@ -106,8 +106,7 @@ export const asyncSpawn =
 			}
 			obj.process.on('exit', (code) => {
 				const finalChunks = dataChunks.length ? dataChunks : errorChunks; // sometimes stderr gets stdout
-				if (finalOptions.stdio === 'pipe') {
-					// process.stdin.off('data', temp);
+				if (finalOptions.stdio === 'pipe' && obj.process?.stdin) {
 					process.stdin.unpipe(obj.process.stdin);
 				}
 				if (code === 0 || code === null) {
