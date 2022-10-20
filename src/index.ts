@@ -1,5 +1,3 @@
-#!/usr/bin/env node --experimental-specifier-resolution=node
-// import keypress from 'keypress';
 import minimist from 'minimist';
 import { intersection } from 'ramda';
 import kill from 'tree-kill';
@@ -45,7 +43,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 	const confluxGroups = confluxArgs['group'] || confluxArgs['g'] || config.parameters?.group;
 	writePermanentText('Current Project', confluxGroups);
 	process.stdout.write('\n');
-	return (folder: Config['folders'][0]) => {
+	return (folder: Exclude<Config['folders'], null | undefined>[0]) => {
 		const groups = folder.groups;
 		const finalGroups = Array.isArray(groups) ? groups : [groups];
 
@@ -57,12 +55,13 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 (async () => {
 	const config = getConfig();
 	if (config === null) return;
-	const folders = config.folders || [];
+	const folders = config.folders;
 	const segregated = segregateConfluxArgs(process.argv.slice(2));
 
 	type T = string | null;
 	const command: T = segregated.mainCommand;
 	const subcommand: T = segregated.remaining._.length ? segregated.remaining._[0] : null;
+	if (subcommand === null) return;
 
 	segregated.remaining._ = segregated.remaining._.slice(0);
 	const args = segregated.mainCommandOptions;
@@ -75,7 +74,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 
 	const Plugin = (await import(globalPluginConfig.name)).default;
 
-	const filteredFolders = folders.filter(filterByConfluxGroups(segregated.cfx)).filter((folder) => {
+	const filteredFolders = (folders || []).filter(filterByConfluxGroups(segregated.cfx)).filter((folder) => {
 		if (folder.plugins?.[globalPluginConfig.alias] === undefined) {
 			return true;
 		} // if no plugins means no local config then means enable
@@ -83,7 +82,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 			return false;
 		} // if explicit false then disable whole plugin
 		const localPluginConfig = folder.plugins[globalPluginConfig.alias];
-		const blacklists = localPluginConfig.blacklist || [];
+		const blacklists = typeof localPluginConfig === 'object' ? localPluginConfig.blacklist || [] : [];
 		return !blacklists.includes(subcommand);
 	});
 	const pluginArguments = {
@@ -98,17 +97,19 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 	const doesRequireFolders = Plugin.doesRequireFolder(pluginArguments);
 	const folder = new Folder(pluginArguments);
 	if (doesRequireFolders) {
-		let instances: Await<ReturnType<Folder['runOnSelectedFolders']>>, folders;
+		let instances: Await<ReturnType<Folder['runOnSelectedFolders']>>;
 		try {
-			folders = segregated.cfx.noPrompt ? filteredFolders : await folder.chooseFolders();
-			instances = await folder.runOnSelectedFolders(Plugin, folders);
+			instances = await folder.runOnSelectedFolders(
+				Plugin,
+				segregated.cfx.noPrompt ? filteredFolders : await folder.chooseFolders()
+			);
 		} catch (e) {}
 		process.on('uncaughtException', function (err) {
-			writeLogicalText('EXITING', err.stack);
+			if (err.stack) writeLogicalText('EXITING', err.stack);
 
 			process.stdout.write('\nEND');
 			process.stdout.write('\nEND');
-			instances.forEach((instance) => instance.plugin.result.process.kill('SIGINT'));
+			instances.forEach((instance) => instance.plugin.result.process?.kill('SIGINT'));
 			process.exit();
 		});
 		process.stdin.on('data', async function (args) {
@@ -139,7 +140,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 				globalConfig.disableStdout = false;
 			}
 			if (args.toString() === '\u0003') {
-				instances.forEach((instance) => instance.plugin.result.process.kill('SIGINT'));
+				instances.forEach((instance) => instance.plugin.result.process?.kill('SIGINT'));
 				process.exit();
 			}
 			if (!globalConfig.disableStdout) process.stdout.write(args);

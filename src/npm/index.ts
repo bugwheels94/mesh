@@ -92,7 +92,7 @@ class Plugin extends BasePluginClass {
 	}
 	private async install() {
 		const { argv, subcommand, args } = this._options;
-		const npmrc = this._options.folders
+		const npmrc = (this._options.folders || [])
 			.map((folder) => {
 				return readRCFile(path.join(folder.path, '.npmrc'));
 			})
