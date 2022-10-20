@@ -16,10 +16,11 @@ export type Config = {
 	folders?: {
 		plugins?: Record<
 			string,
-			{
-				blacklist?: string[];
-				whitelist?: string[];
-			}
+			| {
+					blacklist?: string[];
+					whitelist?: string[];
+			  }
+			| boolean
 		>;
 		name: string;
 		path: string;
@@ -76,7 +77,7 @@ export const writeRCFile = (address: string, data: string) => {
 	fs.writeFileSync(address, data);
 };
 export const getRepos = (folders: Config['folders']) => {
-	return folders.filter((folder) => folder.plugins.git).map((folder) => folder.path);
+	return (folders || []).filter((folder) => folder.plugins?.git).map((folder) => folder.path);
 };
 
 export const cdToFolder = (folder: string): string => {
@@ -86,7 +87,7 @@ export const cdToFolder = (folder: string): string => {
 	return pwd;
 };
 
-const countRegexMatches = (str, regex) => {
+const countRegexMatches = (str: string, regex: RegExp) => {
 	return ((String(str) || '').match(regex) || []).length;
 };
 export function writeLogicalText(folder: string, s: string, options?: TextOptions) {
@@ -135,14 +136,21 @@ export enum ShellTypes {
 }
 export function clearCurrentProcess() {
 	// Does not work in Ubuntu?
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	if (process.stdout?.cursorTo) process.stdout.cursorTo(0, 1);
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	if (process.stdout?.cursorTo) process.stdout.clearLine(0);
 }
 export function clearCurrentLine() {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	if (process.stdout?.cursorTo) process.stdout.cursorTo(0);
 	// process.stdout.clearScreenDown(0);
 }
 export interface Constructable<T> {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	new (...args: any): T;
 }
 export const globalConfig = {

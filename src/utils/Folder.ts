@@ -28,14 +28,14 @@ export type PluginArguments = {
 };
 export class Folder {
 	result: ReturnType<ReturnType<typeof asyncSpawn>>[] = [];
-	promisedResult: Promise<string | string[]> = null;
-	_options: PluginArguments = null;
+	promisedResult: Promise<string | string[]>;
+	_options: PluginArguments;
 	constructor(_options: PluginArguments) {
 		// super(options);
 		this._options = _options;
 	}
 	async chooseFolders(folders?: Config['folders']) {
-		const choices = (folders || this._options.folders).map((f) => f.path);
+		const choices = (folders || this._options.folders || []).map((f) => f.path);
 		if (choices.length === 0) {
 			writePermanentText('Warn', 'No folder found, we are selecting the current folder automatically in 5 seconds...');
 			await delay();
@@ -56,14 +56,14 @@ export class Folder {
 			},
 		]);
 		if (answer.folders.length === 0) throw new Error('Please select at least 1 folder');
-		return this._options.folders.filter((folder) => answer.folders.includes(folder.path));
+		return (this._options.folders || []).filter((folder) => answer.folders.includes(folder.path));
 	}
 
-	async runOnSelectedFolders(Plugin: Constructable<BasePluginClass>, folders: Config['folders']) {
+	async runOnSelectedFolders(Plugin: Constructable<BasePluginClass>, folders: Config['folders'] = []) {
 		const { subcommand } = this._options;
 		const plugins: {
 			plugin: BasePluginClass;
-			folder: Config['folders'][0];
+			folder: Exclude<Config['folders'], null | undefined>[0];
 		}[] = [];
 		for (let i = 0; i < folders.length; i++) {
 			shell.config.silent = true;

@@ -21,7 +21,7 @@ class Plugin extends BasePluginClass {
 			if (!stdout) {
 				writeLogicalText(folder.path, 'Nothing to Commit');
 				process.stdout.write('\n');
-				return null;
+				return {};
 			}
 		}
 		if (subcommand === 'checkout') {

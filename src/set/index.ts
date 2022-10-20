@@ -16,6 +16,8 @@ class Plugin extends BasePluginClass {
 	async setVars(options: PluginArguments) {
 		const config = getConfig();
 		config.parameters = { ...(config.parameters || {}), ...options.argv };
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
 		delete config.parameters._;
 		writeJSONFile(path.join(process.cwd(), 'package.json'), config);
 		writePermanentText('', 'Parameters Set Successfully');

@@ -7,7 +7,13 @@ import { getConfig, writeJSONFile } from '../utils/util';
 
 export const addFolder = async function () {
 	const config = getConfig();
-	const answers = await inquirer.prompt([
+	const answers: {
+		path: string;
+		plugins: string[];
+		name: string;
+		groups: string[];
+		newGroups: string;
+	} = await inquirer.prompt([
 		{
 			type: 'input',
 			name: 'path',
@@ -22,16 +28,16 @@ export const addFolder = async function () {
 			type: 'checkbox',
 			name: 'plugins',
 			message: `Select the plugins to Disable, if any`,
-			choices: config.plugins.map((plugin) => plugin.alias),
+			choices: (config.plugins || []).map((plugin) => plugin.alias),
 		},
 		{
 			type: 'checkbox',
 			name: 'groups',
 			message: `Select the groups the folder will belong to`,
 			choices: uniq(
-				config.folders.reduce((acc, folder) => {
-					return [...acc, ...folder.groups];
-				}, [])
+				(config.folders || []).reduce((acc, folder) => {
+					return [...acc, ...(folder.groups || [])];
+				}, [] as string[])
 			),
 		},
 		{
@@ -40,16 +46,18 @@ export const addFolder = async function () {
 			message: `Create new group that this folder belongs to(Use comma to create multiple groups)`,
 		},
 	]);
-	config.folders.push({
-		name: answers.name,
-		path: answers.path,
-		groups: uniq([...answers.groups, ...(answers.newGroups ? answers.newGroups.split(',') : [])]),
-		plugins: answers.plugins.reduce((acc, plugin) => {
-			acc[plugin] = false;
-			return acc;
-		}, {}),
-	});
-	config.workspaces.push(answers.path);
+	config.folders = [
+		...(config.folders || []),
+		{
+			name: answers.name,
+			path: answers.path,
+			groups: uniq([...answers.groups, ...(answers.newGroups ? answers.newGroups.split(',') : [])]),
+			plugins: answers.plugins.reduce((acc, plugin) => {
+				acc[plugin] = false;
+				return acc;
+			}, {} as Record<string, boolean>),
+		},
+	];
 	writeJSONFile(path.join(process.cwd(), 'package.json'), config);
 	return null;
 };

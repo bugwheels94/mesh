@@ -48,17 +48,16 @@ class Plugin extends BasePluginClass {
 		// All of the deps will be removed from package.json bcoz it is assumed that conflux dependencies will be exhausted while
 		// while building the project
 		// if they are not being used in npm build then maybe dont sync in which case it wont be removed
-		console.log(packageJsonDevDependencies);
 		const syncingDeps = confluxDeps
 			.map((dependency) => {
-				if (!packageJsonDependencies[dependency]) return null;
+				if (!packageJsonDependencies[dependency]) return '';
 				syncingDepsNames.push(dependency);
 				return `${dependency}${branch === 'master' ? '' : '@' + branch}`;
 			})
 			.filter((t) => t);
 		const syncingDevDeps = confluxDeps
 			.map((dependency) => {
-				if (!packageJsonDevDependencies[dependency]) return null;
+				if (!packageJsonDevDependencies[dependency]) return '';
 				syncingDepsNames.push(dependency);
 				return `${dependency}${branch === 'master' ? '' : '@' + branch}`;
 			})
