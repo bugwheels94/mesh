@@ -24,6 +24,17 @@ class Plugin extends BasePluginClass {
 				return {};
 			}
 		}
+		if (subcommand === 'push') {
+			const temp = cdToFolder(folder.path);
+			const branch = args[2];
+			const { stdout, stderr } = exec(`git diff origin/${branch}`);
+			shell.cd(temp);
+			if (!stdout) {
+				writeLogicalText(folder.path, 'Nothing to push');
+				process.stdout.write('\n');
+				return {};
+			}
+		}
 		if (subcommand === 'checkout') {
 			const temp = cdToFolder(folder.path);
 			const branchName = argv['b'] || argv['_'][1];
