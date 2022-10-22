@@ -8,24 +8,7 @@ import { localConfig } from './utils/config';
 import { Await, Config, getConfig, globalConfig, writeLogicalText, writePermanentText } from './utils/util';
 
 const segregateConfluxArgs = (properArgv: string[]) => {
-	let isPrevousIndependentToken = true;
-	let mainCommandStartIndex = 0;
-	for (let i = 0; i < properArgv.length; i++) {
-		// match start independent token
-		if (properArgv[i].match(/^[^-]/)) {
-			if (isPrevousIndependentToken) {
-				mainCommandStartIndex = i;
-				console.log(i, 'MM', properArgv[i]);
-				break;
-			} else {
-				isPrevousIndependentToken = true;
-			}
-		} else if (properArgv[i].match(/^-.*=/)) {
-			isPrevousIndependentToken = true;
-		} else {
-			isPrevousIndependentToken = false;
-		}
-	}
+	const mainCommandStartIndex = properArgv.indexOf('-c') + 1 || 1;
 
 	const meshCommandOptions = properArgv.slice(0, mainCommandStartIndex);
 	const mainCommandWithOptions = properArgv.slice(mainCommandStartIndex);
@@ -57,7 +40,6 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 	if (config === null) return;
 	const folders = config.folders;
 	const segregated = segregateConfluxArgs(process.argv.slice(2));
-
 	type T = string | null;
 	const command: T = segregated.mainCommand;
 	const subcommand: T = segregated.remaining._.length ? segregated.remaining._[0] : null;
@@ -69,7 +51,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 		({ alias }) => alias === command
 	) || {
 		name: './generic',
-		alias: 'na',
+		alias: segregated.mainCommand,
 	};
 
 	const Plugin = (await import(globalPluginConfig.name)).default;
@@ -101,7 +83,8 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 		try {
 			instances = await folder.runOnSelectedFolders(
 				Plugin,
-				segregated.cfx.noPrompt ? filteredFolders : await folder.chooseFolders()
+				// .y means -y true which is for no prompt
+				segregated.cfx.y ? filteredFolders : await folder.chooseFolders()
 			);
 		} catch (e) {}
 		process.on('uncaughtException', function (err) {
@@ -134,7 +117,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 						instances = [...newInstances, ...remainingInstances];
 					}, 2000);
 				} catch (e) {
-					console.log(e);
+					console.error(e);
 				}
 
 				globalConfig.disableStdout = false;
