@@ -1,4 +1,13 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
-
-git fetch origin && git merge origin/master
+bold=$(tput bold)
+normal=$(tput sgr0)
+git fetch origin
+MASTER_LAST_COMMIT=$(git rev-parse origin/master)
+COMMON_COMMIT=$(git merge-base origin/master HEAD)
+if [ $MASTER_LAST_COMMIT != $COMMON_COMMIT ];
+then
+    git merge --no-edit origin/master 
+    echo "Merged Remote branch master. ${bold}PLEASE PUSH AGAIN NOW!";
+    exit 1;
+fi
