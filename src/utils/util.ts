@@ -95,12 +95,7 @@ export function writeLogicalText(folder: string, s: string, options?: TextOption
 	// Multiline
 	else writePermanentText(folder, s, options);
 }
-export function isErrorMessage<T>(obj: T): obj is T & { message: string } {
-	return obj && 'message' in obj;
-}
-export function isProcess<T>(obj: T): obj is T & { process: ChildProcess } {
-	return obj && 'process' in obj;
-}
+
 export const sanitizeText = (str: string) => {
 	return (str || '').replace(/^\s+|\s+$/g, '');
 };
