@@ -54,7 +54,7 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 		alias: segregated.mainCommand,
 	};
 
-	const Plugin = (await import(globalPluginConfig.name)).default;
+	const Plugin = (await import(globalPluginConfig.name + './index.js')).default;
 
 	const filteredFolders = (folders || []).filter(filterByConfluxGroups(segregated.cfx)).filter((folder) => {
 		if (folder.plugins?.[globalPluginConfig.alias] === undefined) {
