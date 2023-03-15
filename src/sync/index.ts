@@ -30,7 +30,19 @@ class Plugin extends BasePluginClass {
 		}
 	}
 	private async syncDependencies() {
-		const branch = process.env.GITHUB_REF
+		// IS_TRIGGERED_FROM_PR = "false"
+		let flow: string | { base_branch: string } = process.env.FLOW_EVENT_SOURCE;
+		if (flow) {
+			try {
+				flow = JSON.parse(flow) as { base_branch: string };
+			} catch (e) {
+				console.log('FLOW_EVENT_SOURCE json is invalid', e);
+				flow = '';
+			}
+		}
+		let branch = flow
+			? flow.base_branch
+			: process.env.GITHUB_REF
 			? process.env.GITHUB_REF.split('/').slice(2).join('/')
 			: process.env.BRANCH_NAME
 			? process.env.BRANCH_NAME
@@ -39,7 +51,6 @@ class Plugin extends BasePluginClass {
 		const packageJson = readJSONFile('package.json');
 		const workspaceDependencies: ConfluxRC = packageJson.syncWorkspaceDependencies || {};
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
-		if (!isBranchInProgress) return null;
 		const confluxDeps = Object.keys(workspaceDependencies) || [];
 		const syncingDepsNames: string[] = [];
 		const packageJsonDependencies: Record<string, string> = packageJson.dependencies || {};
