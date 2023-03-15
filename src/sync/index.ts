@@ -31,13 +31,12 @@ class Plugin extends BasePluginClass {
 	}
 	private async syncDependencies() {
 		// IS_TRIGGERED_FROM_PR = "false"
-		let flow: string | { base_branch: string } = process.env.FLOW_EVENT_SOURCE;
-		if (flow) {
+		let flow: undefined | { base_branch: string };
+		if (process.env.FLOW_EVENT_SOURCE) {
 			try {
-				flow = JSON.parse(flow) as { base_branch: string };
+				flow = JSON.parse(process.env.FLOW_EVENT_SOURCE) as { base_branch: string };
 			} catch (e) {
 				console.log('FLOW_EVENT_SOURCE json is invalid', e);
-				flow = '';
 			}
 		}
 		let branch = flow
@@ -51,6 +50,7 @@ class Plugin extends BasePluginClass {
 		const packageJson = readJSONFile('package.json');
 		const workspaceDependencies: ConfluxRC = packageJson.syncWorkspaceDependencies || {};
 		const isBranchInProgress = ['next', 'next-major', 'alpha', 'beta', 'master'].includes(branch);
+		if (!isBranchInProgress) branch = 'master';
 		const confluxDeps = Object.keys(workspaceDependencies) || [];
 		const syncingDepsNames: string[] = [];
 		const packageJsonDependencies: Record<string, string> = packageJson.dependencies || {};
@@ -104,6 +104,7 @@ class Plugin extends BasePluginClass {
 				folder: null,
 				shouldRunInCurrentFolder: true,
 			}).promise;
+		return null;
 		// move to the end otherwise node_modules end up removing
 	}
 }
