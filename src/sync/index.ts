@@ -1,6 +1,6 @@
 import { BasePluginClass, PluginArguments } from '../utils/Plugin';
 import { asyncSpawn } from '../utils/asyncSpawn';
-import { ConfluxRC, readJSONFile, ShellTypes, writeJSONFile } from '../utils/util';
+import { ConfluxRC, readJSONFile, ShellTypes, writeJSONFile, writePermanentText } from '../utils/util';
 // const execPromise = util.promisify(exec);
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
@@ -90,20 +90,24 @@ class Plugin extends BasePluginClass {
 			dependencies,
 			devDependencies,
 		});
-		if (syncingDeps.length)
+		if (syncingDeps.length) {
+			writePermanentText('Syncing Dependencies: ', syncingDeps.join(', '));
 			await this.chooseShellMethod(this._options.subcommand).method({
 				args: ['install', '--legacy-peer-deps', ...syncingDeps],
 				command: 'npm',
 				folder: null,
 				shouldRunInCurrentFolder: true,
 			}).promise;
-		if (syncingDevDeps.length)
+		}
+		if (syncingDevDeps.length) {
+			writePermanentText('Syncing Dependencies: ', syncingDeps.join(', '));
 			await this.chooseShellMethod(this._options.subcommand).method({
 				args: ['install', '--legacy-peer-deps', '--save-dev', ...syncingDevDeps],
 				command: 'npm',
 				folder: null,
 				shouldRunInCurrentFolder: true,
 			}).promise;
+		}
 		return null;
 		// move to the end otherwise node_modules end up removing
 	}
