@@ -51,6 +51,7 @@ class Plugin extends BasePluginClass {
 				.replace('FORMATS', JSON.stringify(config.formats))
 				.replace('BABEL_HELPERS', config.babelHelpers || 'runtime')
 				.replace('CJS_FILE_EXTENSION', config.cjsFileExtension || 'js')
+				.replace('DECORATORS', config.decorators || false)
 		);
 		setTimeout(() => {
 			// fs.unlinkSync(path.join(process.cwd(), 'rollup.config.cjs'))
