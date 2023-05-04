@@ -37,7 +37,6 @@ export const addSemantic = async function (plugin: Plugin) {
 		folder,
 		hideOutputAtEnd: true,
 	}).promise;
-	console.log('HI');
 	writeJSONFile(path.join(folder.path, '.releaserc'), {
 		plugins: [
 			'@semantic-release/commit-analyzer',

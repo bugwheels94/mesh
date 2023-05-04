@@ -24,5 +24,9 @@ export const localConfig = {
 			name: './projects',
 			alias: 'projects',
 		},
+		{
+			name: './run',
+			alias: 'run',
+		},
 	],
 };

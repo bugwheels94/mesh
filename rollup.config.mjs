@@ -6,7 +6,7 @@ import globby from 'fast-glob';
 import path from 'path';
 const extensions = ['.js', '.jsx', '.ts', '.tsx'];
 const babelIncludes = ['./src/**/*', './src/*'];
-let configs = globby.sync(['./src/**/*', '!./src/**/*.js']);
+let configs = globby.sync(['./src/**/*']);
 // configs = globby.sync(['./src/theme.ts']);
 const bundleNpmWorkspacePackages = [];
 const bundlePackages = [];
