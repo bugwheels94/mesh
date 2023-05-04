@@ -9,6 +9,7 @@ type CommonOptions = {
 	hideOutputAtEnd?: boolean;
 	isRealTime?: boolean;
 	shouldRunInCurrentFolder?: boolean;
+	noLogs?: boolean;
 };
 
 export const asyncSpawn =
@@ -17,6 +18,7 @@ export const asyncSpawn =
 		command,
 		args,
 		folder,
+		noLogs,
 		...opts
 	}: {
 		folder: Exclude<Config['folders'], null | undefined>[0] | null;
@@ -43,19 +45,19 @@ export const asyncSpawn =
 			const dataChunks: Uint8Array[] = [];
 			const errorChunks: Uint8Array[] = [];
 			if (finalOptions.stdio === 'inherit') {
-				writePermanentText(folderPath, 'Starting');
+				!noLogs && writePermanentText(folderPath, 'Starting');
 				process.stdout.write('\n');
 			}
 			obj.process = spawn(command, args, {
 				...finalOptions,
-				env: process.env,
+				env: { ...process.env, ...(finalOptions.env ? finalOptions.env : {}) },
 				shell: true,
 			});
-			writePermanentText(
-				folderPath,
-				'Running: (' + command + ' ' + args.join(' ') + ') in the directory: ' + finalOptions.cwd
-			);
-			console.log();
+			!noLogs &&
+				writePermanentText(
+					folderPath,
+					'Running: (' + command + ' ' + args.join(' ') + ') in the directory: ' + finalOptions.cwd
+				);
 
 			// const temp = (ch: Buffer) => {
 			//   console.log('writing', ch);
@@ -74,13 +76,13 @@ export const asyncSpawn =
 					if (globalConfig.disableStdout) return;
 					if (buffer.length) {
 						const s = Buffer.concat(buffer).toString();
-						writeLogicalText(folderPath, s);
+						!noLogs && writeLogicalText(folderPath, s);
 						process.stdout.write('\n');
 						buffer = [];
 					}
 					if (errorBuffer.length) {
 						const s = Buffer.concat(errorBuffer).toString();
-						writeLogicalText(folderPath, s, { isError: true });
+						!noLogs && writeLogicalText(folderPath, s, { isError: true });
 						process.stdout.write('\n');
 						errorBuffer = [];
 					}
@@ -112,14 +114,14 @@ export const asyncSpawn =
 				if (code === 0 || code === null) {
 					const s = Buffer.concat(finalChunks).toString() || 'Successful';
 					if (!finalOptions.hideOutputAtEnd || !finalChunks.length) {
-						writeLogicalText(folderPath, s);
+						!noLogs && writeLogicalText(folderPath, s);
 						process.stdout.write('\n');
 					}
 					resolve(s);
 				} else {
 					const s = Buffer.concat(finalChunks).toString() || `Failed with code ${code}`;
 					if (!finalOptions.hideOutputAtEnd || !finalChunks.length) {
-						writeLogicalText(folderPath, s);
+						!noLogs && writeLogicalText(folderPath, s);
 						process.stdout.write('\n');
 					}
 					reject(s);

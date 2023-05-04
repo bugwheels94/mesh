@@ -8,7 +8,6 @@ import { Folder } from './utils/Folder';
 import { BasePluginClass } from './utils/Plugin';
 import { localConfig } from './utils/config';
 import { Await, Config, getConfig, globalConfig, writeLogicalText, writePermanentText } from './utils/util';
-
 const segregateConfluxArgs = (properArgv: string[]) => {
 	const mainCommandStartIndex = properArgv.indexOf('-c') + 1 || 1;
 

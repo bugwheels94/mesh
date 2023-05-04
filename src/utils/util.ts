@@ -62,11 +62,14 @@ export const readRCFile = (fileName: string) => {
 };
 export const readJSONFile = (fileName: string) => {
 	try {
-		return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'));
+		var json = new Function('return ' + fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'))();
+		return json;
+		// return JSON.parse(fs.readFileSync(path.join(process.cwd(), fileName), 'utf8'));
 	} catch (e) {
 		writePermanentText('Error', 'Cannot read File ' + fileName, {
 			isError: true,
 		});
+		console.log(e);
 		return null;
 	}
 };
