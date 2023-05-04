@@ -15,6 +15,7 @@ const neverBundlePackages = NEVER_BUNDLE_PACKAGES;
 const shouldBundleLocalFilesTogether = BUNDLE_LOCAL_FILES_TOGETHER;
 const shouldBundleNodeModules = BUNDLE_NODE_MODULES;
 const isDevelopment = process.env.ROLLUP_WATCH;
+const decorators = DECORATORS;
 const isProduction = process.env.NODE_ENV === 'production';
 const isPackageDependency = (pkg, path, importer = '') => {
 	return path.includes('/' + pkg + '/') || (importer.includes('/' + pkg + '/') && path.startsWith('.')) || path === pkg;
@@ -82,7 +83,7 @@ const getRollupConfig =
 					babelHelpers: 'BABEL_HELPERS',
 					include: babelIncludes,
 				}),
-				isDevelopment ? undefined : terser({ keep_fnames: true }),
+				isDevelopment ? undefined : terser({ keep_fnames: decorators }),
 			],
 		};
 	};
@@ -108,8 +109,11 @@ const wow = inputs.reduce((acc, input) => {
 	});
 	// const tempp = files.map((file) => path.join(process.env.FOLDER_PATH, file));
 	const formats = FORMATS;
-	return formats.reduce((acc, format) => {
-		return [...acc, ...files.map(getRollupConfig({ isBrowser: input.browser, format }))];
-	}, []);
+	return [
+		...acc,
+		...formats.reduce((acc, format) => {
+			return [...acc, ...files.map(getRollupConfig({ isBrowser: input.browser, format }))];
+		}, []),
+	];
 }, []);
 export default wow;
