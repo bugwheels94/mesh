@@ -83,11 +83,13 @@ const filterByConfluxGroups = (confluxArgs: minimist.ParsedArgs) => {
 	if (doesRequireFolders) {
 		let instances: Await<ReturnType<Folder['runOnSelectedFolders']>>;
 		try {
+			console.log('mota');
 			instances = await folder.runOnSelectedFolders(
 				Plugin,
 				// .y means -y true which is for no prompt
 				segregated.cfx.y ? filteredFolders : await folder.chooseFolders()
 			);
+			process.exit();
 		} catch (e) {}
 		process.on('uncaughtException', function (err) {
 			if (err.stack) writeLogicalText('EXITING', err.stack);

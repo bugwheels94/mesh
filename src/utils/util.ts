@@ -125,6 +125,7 @@ export function writePermanentText(heading: string, text: string, options?: Text
 export function writeTemporaryText(heading: string, text: string) {
 	clearCurrentLine();
 	const m = text.toString();
+
 	process.stdout.write(`${chalk.bold.blue(`${heading}:`)} ${m.split('\n').pop()}`);
 }
 export enum ShellTypes {

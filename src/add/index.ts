@@ -9,6 +9,7 @@ import './prettier';
 import { addCommitizen } from './commitizen';
 import { addPrettier } from './prettier';
 import { addSemantic } from './semantic';
+import { addBundler } from './bundler';
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
 		super(options);
@@ -22,6 +23,9 @@ class Plugin extends BasePluginClass {
 		}
 		if (subcommand === 'prettier') {
 			return { promise: addPrettier(this), folder };
+		}
+		if (subcommand === 'bundler') {
+			return { promise: addBundler(this), folder };
 		}
 		if (subcommand === 'semantic-release') {
 			return { promise: addSemantic(this), folder };
@@ -48,6 +52,11 @@ class Plugin extends BasePluginClass {
 				return {
 					type: ShellTypes.VIRTUAL_SYNC,
 					method: asyncSpawn({ stdio: 'pipe' }),
+				};
+			case 'bundler':
+				return {
+					type: ShellTypes.VIRTUAL_SYNC,
+					method: asyncSpawn({ stdio: 'inherit' }),
 				};
 			default:
 				return {
