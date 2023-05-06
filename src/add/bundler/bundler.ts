@@ -1,12 +1,14 @@
 import path from 'path';
-import Plugin from '.';
-import { readJSONFile } from '../utils/util';
+import Plugin from '..';
+import { readJSONFile, writeJSONFile } from '../../utils/util';
 import fs from 'fs';
 export const addBundler = async function (plugin: Plugin) {
 	const config = readJSONFile('rollup.mesh.json');
 	const ff = process.cwd();
+	const decorators = config.decorators || false;
+	const babelHelpers = config.babelHelpers || 'runtime';
 	fs.writeFileSync(
-		path.join(ff, 'rollup.config.cjs'),
+		path.join(ff, 'rollup.config.mjs'),
 		fs
 			.readFileSync(path.join(__dirname, 'rollup.js'), 'utf-8')
 			.replace('BUNDLE_NPM_WORKSPACE_PACKAGES', '' + JSON.stringify(config.bundleNpmWorkspacePackages))
@@ -16,11 +18,12 @@ export const addBundler = async function (plugin: Plugin) {
 			.replace('BUNDLE_NODE_MODULES', '' + config.bundleNodeModules)
 			.replace('INPUTS', JSON.stringify(config.inputs))
 			.replace('FORMATS', JSON.stringify(config.formats))
-			.replace('BABEL_HELPERS', config.babelHelpers || 'runtime')
+			.replace('BABEL_HELPERS', babelHelpers)
 			.replace('CJS_FILE_EXTENSION', config.cjsFileExtension || 'js')
-			.replace('DECORATORS', config.decorators || false)
+			.replace('DECORATORS', decorators)
 	);
-	const packages = [
+	const typescript = config.typescript ? config.typescript : true;
+	const packages: string[] = [
 		'@rollup/plugin-babel',
 		'@rollup/plugin-node-resolve',
 		'rollup-plugin-peer-deps-external',
@@ -31,13 +34,39 @@ export const addBundler = async function (plugin: Plugin) {
 		'fast-glob',
 		'rollup',
 		'@rollup/plugin-terser',
-	];
+		'@babel/core',
+		decorators && '@babel/plugin-proposal-decorators',
+		'@babel/plugin-transform-runtime',
+		'@babel/preset-env',
+		typescript && '@babel/preset-typescript',
+		'babel',
+		'babel-plugin-const-enum',
+		decorators && 'babel-plugin-transform-typescript-metadata', // this plugin is for legacy ones only
+	].filter(Boolean);
+	const productionPackages = [babelHelpers === 'runtime' && '@babel/runtime'].filter(Boolean) as string[];
+	console.log(productionPackages);
+	fs.writeFileSync(
+		path.join(ff, 'babel.config.js'),
+		fs
+			.readFileSync(path.join(__dirname, 'babel.js'), 'utf-8')
+			.replace('BABEL_HELPERS', babelHelpers)
+			.replace(/DECORATORS/g, decorators)
+			.replace('TYPESCRIPT', config.typescript ? config.typescript : true)
+	);
 	await plugin.chooseShellMethod(plugin._options.subcommand).method({
 		args: ['install', '-D', ...packages],
 		command: 'npm',
 		folder: null,
 		shouldRunInCurrentFolder: true,
 	}).promise;
+	if (productionPackages.length) {
+		await plugin.chooseShellMethod(plugin._options.subcommand).method({
+			args: ['install', ...productionPackages],
+			command: 'npm',
+			folder: null,
+			shouldRunInCurrentFolder: true,
+		}).promise;
+	}
 	await Promise.all([
 		plugin.chooseShellMethod(plugin._options.subcommand).method({
 			args: ['pkg', 'set', 'scripts.build:code="rollup -c"'],

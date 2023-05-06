@@ -4,9 +4,10 @@ import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import globby from 'fast-glob';
 import path from 'path';
+import copy from 'rollup-plugin-copy';
 const extensions = ['.js', '.jsx', '.ts', '.tsx'];
 const babelIncludes = ['./src/**/*', './src/*'];
-let configs = globby.sync(['./src/**/*']);
+let configs = globby.sync(['./src/**/*.ts']);
 // configs = globby.sync(['./src/theme.ts']);
 const bundleNpmWorkspacePackages = [];
 const bundlePackages = [];
@@ -76,6 +77,10 @@ const config = (input, { extractDependency, extractTests } = {}) => {
 			return !shouldBundleLocalFilesTogether;
 		},
 		plugins: [
+			copy({
+				targets: [{ src: 'src/add/bundler/**.js', dest: 'dist/es/add/bundler' }],
+				copyOnce: true,
+			}),
 			peerDepsExternal(),
 			resolve({
 				extensions,

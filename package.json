@@ -55,6 +55,7 @@
 		"pump": "^3.0.0",
 		"ramda": "^0.27.1",
 		"rollup": "^3.21.3",
+		"rollup-plugin-copy": "^3.4.0",
 		"rollup-plugin-peer-deps-external": "^2.2.4",
 		"semver": "^7.3.5",
 		"shelljs": "^0.8.4",
