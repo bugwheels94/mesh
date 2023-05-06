@@ -1,6 +1,6 @@
 import path from 'path';
-import Plugin from '.';
-import { readJSONFile } from '../utils/util';
+import Plugin from '..';
+import { readJSONFile, writeJSONFile } from '../../utils/util';
 import fs from 'fs';
 export const addBundler = async function (plugin: Plugin) {
 	const config = readJSONFile('rollup.mesh.json');
@@ -32,6 +32,14 @@ export const addBundler = async function (plugin: Plugin) {
 		'rollup',
 		'@rollup/plugin-terser',
 	];
+	fs.writeFileSync(
+		path.join(ff, 'babel.config.js'),
+		fs
+			.readFileSync(path.join(__dirname, 'babel.js'), 'utf-8')
+			.replace('BABEL_HELPERS', config.babelHelpers || 'runtime')
+			.replace('DECORATORS', config.decorators || false)
+			.replace('TYPESCRIPT', config.typescript || true)
+	);
 	await plugin.chooseShellMethod(plugin._options.subcommand).method({
 		args: ['install', '-D', ...packages],
 		command: 'npm',

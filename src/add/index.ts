@@ -9,7 +9,7 @@ import './prettier';
 import { addCommitizen } from './commitizen';
 import { addPrettier } from './prettier';
 import { addSemantic } from './semantic';
-import { addBundler } from './bundler';
+import { addBundler } from './bundler/bundler';
 class Plugin extends BasePluginClass {
 	constructor(options: PluginArguments) {
 		super(options);
