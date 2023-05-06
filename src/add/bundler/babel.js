@@ -18,7 +18,10 @@ module.exports = {
 		...(TYPESCRIPT ? ['@babel/preset-typescript'] : []),
 	],
 	plugins: [
-		DECORATORS && ['@babel/plugin-proposal-decorators', { decoratorsBeforeExport: true }],
+		DECORATORS && 'babel-plugin-transform-typescript-metadata',
+
+		DECORATORS && ['@babel/plugin-proposal-decorators', { legacy: true }],
+		['@babel/plugin-proposal-class-properties', { loose: true }],
 		[
 			'const-enum',
 			{
@@ -26,7 +29,7 @@ module.exports = {
 			},
 		],
 		cjs && ['@babel/transform-modules-commonjs', { loose }],
-		BABEL_HELPERS === 'runtime' && [
+		'BABEL_HELPERS' === 'runtime' && [
 			'@babel/transform-runtime',
 			{
 				// useESModules: !cjs, @babe
