@@ -21,7 +21,7 @@ const isPackageDependency = (pkg, path, importer = '') => {
 	return path.includes('/' + pkg + '/') || (importer.includes('/' + pkg + '/') && path.startsWith('.')) || path === pkg;
 };
 const getRollupConfig =
-	({ isBrowser = false, format = 'esm' } = { isBrowser: false, format: 'esm' }) =>
+	({ isBrowser = false, format = 'esm', totalFormats = 1 } = { isBrowser: false, format: 'esm', totalFormats: 1 }) =>
 	(localInput) => {
 		const input = localInput;
 		return {
@@ -29,7 +29,7 @@ const getRollupConfig =
 			output: {
 				file: path.join(
 					'./dist',
-					format,
+					totalFormats > 1 ? format : "",
 					// isBrowser ? '' : 'server',
 					localInput.replace('/src', '').replace(/\.(tsx|ts)/, format === 'cjs' ? '.js' : '.js')
 				),
@@ -112,7 +112,7 @@ const wow = inputs.reduce((acc, input) => {
 	return [
 		...acc,
 		...formats.reduce((acc, format) => {
-			return [...acc, ...files.map(getRollupConfig({ isBrowser: input.browser, format }))];
+			return [...acc, ...files.map(getRollupConfig({ isBrowser: input.browser, format, totalFormats: formats.length }))];
 		}, []),
 	];
 }, []);
