@@ -36,3 +36,5 @@ If all of your repos have same npm command, lets say `start:watch` then you can 
 Based on the same above concept, you can use github's gh like `mesh -g GROUP_NAME gh pr create`
 
 **Note:** If you dont wanna mention `-g GROUP_NAME` then you can also do `mesh set -g GROUP_NAME` and then omit writing `-g` everytime
+
+CS!
